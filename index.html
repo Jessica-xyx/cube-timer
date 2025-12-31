@@ -3,60 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>正向文字魔方计时器</title>
+    <title>实体魔方计时器</title>
     <style>
         :root { --size: 180px; }
-        body { margin: 0; background: #121212; color: white; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; touch-action: none; overflow: hidden; }
+        body { margin: 0; background: #000; color: white; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; touch-action: none; overflow: hidden; }
         
-        /* 3D 场景 */
         .scene { width: var(--size); height: var(--size); perspective: 1000px; }
         .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
         
+        /* 核心修改：让每一面完全不透明 */
         .face { 
             position: absolute; width: var(--size); height: var(--size); 
             display: flex; align-items: center; justify-content: center; 
-            font-weight: 800; border-radius: 30px;
-            backface-visibility: hidden; -webkit-backface-visibility: hidden;
-            background: #2a2a2a; 
-            box-shadow: inset 0 0 15px rgba(255,255,255,0.1), 0 10px 30px rgba(0,0,0,0.5);
+            font-weight: 800; border-radius: 20px;
+            backface-visibility: hidden; 
+            -webkit-backface-visibility: hidden;
+            border: 2px solid rgba(255,255,255,0.2);
+            /* 确保背景完全不透明 */
+            opacity: 1; 
         }
 
-        /* 文字容器：我们要动态控制这个容器的旋转 */
-        .text-fix { 
-            display: block; 
-            text-align: center; 
-            font-size: 28px; 
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        small { font-size: 14px; opacity: 0.8; display: block; }
+        .text-fix { display: block; text-align: center; font-size: 32px; transition: transform 0.6s; }
+        small { font-size: 14px; display: block; margin-top: 5px; }
         
-        /* 各面颜色 */
-        .front  { transform: rotateY(  0deg) translateZ(90px); background: linear-gradient(145deg, #ff4757, #b33939); } 
-        .back   { transform: rotateY(180deg) translateZ(90px); background: linear-gradient(145deg, #2ed573, #218c74); } 
-        .right  { transform: rotateY( 90deg) translateZ(90px); background: linear-gradient(145deg, #1e90ff, #227093); } 
-        .left   { transform: rotateY(-90deg) translateZ(90px); background: linear-gradient(145deg, #ffa502, #cc8e35); } 
-        .top    { transform: rotateX( 90deg) translateZ(90px); background: linear-gradient(145deg, #a29bfe, #6c5ce7); } 
-        .bottom { transform: rotateX(-90deg) translateZ(90px); background: linear-gradient(145deg, #fd79a8, #e84393); }
+        /* 使用完全不透明的颜色 */
+        .front  { transform: rotateY(  0deg) translateZ(90px); background: #ff4757; } /* 40m 红 */
+        .back   { transform: rotateY(180deg) translateZ(90px); background: #2ed573; } /* 60m 绿 */
+        .right  { transform: rotateY( 90deg) translateZ(90px); background: #1e90ff; } /* 25m 蓝 */
+        .left   { transform: rotateY(-90deg) translateZ(90px); background: #ffa502; } /* 10m 橙 */
+        .top    { transform: rotateX( 90deg) translateZ(90px); background: #a29bfe; } /* 30m 紫 */
+        .bottom { transform: rotateX(-90deg) translateZ(90px); background: #fd79a8; } /* 90m 粉 */
 
         #display-area { text-align: center; }
-        #timer-display { font-size: 5rem; font-weight: 100; font-variant-numeric: tabular-nums; }
-        #current-mode { color: #888; letter-spacing: 3px; font-size: 0.8rem; }
+        #timer-display { font-size: 5.5rem; font-weight: 200; font-variant-numeric: tabular-nums; }
+        #current-mode { color: #aaa; letter-spacing: 4px; font-size: 0.9rem; }
 
         .controls { display: flex; gap: 20px; margin-bottom: 40px; }
         button { 
-            width: 70px; height: 70px; border-radius: 20px; border: none; 
-            font-weight: bold; background: rgba(255,255,255,0.05); color: white;
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);
+            width: 75px; height: 50px; border-radius: 12px; border: 1px solid #444; 
+            font-weight: bold; background: #222; color: white;
         }
         #start-btn { border-color: #2ed573; color: #2ed573; }
         #pause-btn { border-color: #ffa502; color: #ffa502; }
+        #reset-btn { border-color: #ff4757; color: #ff4757; }
     </style>
 </head>
 <body>
 
     <div id="display-area">
         <div id="timer-display">00:00</div>
-        <div id="current-mode">拨动魔方选择时间</div>
+        <div id="current-mode">滑动拨动魔方</div>
     </div>
 
     <div class="scene">
@@ -89,14 +85,9 @@
         const modeDisplay = document.getElementById('current-mode');
         const texts = document.querySelectorAll('.text-fix');
 
-        // 更新魔方旋转及文字纠正
         function updateRotation() {
             cube.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            
-            // 关键点：为了让文字永远水平，我们需要让文字在 Z 轴上反向旋转
-            // 同时在 X/Y 轴上也做一定的抵消补偿
             texts.forEach(text => {
-                // 这里的逻辑是抵消父容器的旋转
                 text.style.transform = `rotateZ(${-rotateY}deg)`;
             });
         }
@@ -121,11 +112,8 @@
         document.addEventListener('touchend', () => {
             cube.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
             texts.forEach(t => t.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)');
-            
-            // 吸附到 90 度倍数
             rotateX = Math.round(rotateX / 90) * 90;
             rotateY = Math.round(rotateY / 90) * 90;
-            
             updateRotation();
             detectFace();
         });
@@ -152,7 +140,7 @@
             if (!isRunning) {
                 timeLeft = time * 60;
                 updateDisplay();
-                modeDisplay.innerText = `模式: ${time} 分钟`;
+                modeDisplay.innerText = `当前选中: ${time} 分钟`;
             }
         }
 
@@ -173,8 +161,7 @@
                     isRunning = false;
                     timeLeft = currentTargetTime * 60;
                     startTimer();
-                    // 简单的震动反馈
-                    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                    if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
                 }
             }, 1000);
         }
@@ -188,7 +175,6 @@
             updateDisplay();
         };
 
-        // 初始化
         updateRotation();
         detectFace();
     </script>

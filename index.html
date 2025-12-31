@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>魔方循环计时器</title>
+    <style>
+        :root { --cube-size: 200px; }
+        body { margin: 0; background: #121212; color: white; font-family: sans-serif; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        
+        /* 3D 容器 */
+        .scene { width: var(--cube-size); height: var(--cube-size); perspective: 600px; }
+        .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        /* 正方体各面样式 */
+        .face { position: absolute; width: var(--cube-size); height: var(--cube-size); border: 2px solid #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; background: rgba(255,255,255,0.1); backdrop-filter: blur(5px); border-radius: 20px; }
+        
+        .front  { transform: rotateY(0deg) translateZ(100px); color: #ff4757; }
+        .back   { transform: rotateY(180deg) translateZ(100px); color: #2ed573; }
+        .right  { transform: rotateY(90deg) translateZ(100px); color: #1e90ff; }
+        .left   { transform: rotateY(-90deg) translateZ(100px); color: #ffa502; }
+
+        #timer-display { font-size: 4rem; margin-top: 50px; font-variant-numeric: tabular-nums; }
+        #msg { margin-top: 20px; color: #888; text-align: center; padding: 0 20px; }
+        button { margin-top: 30px; padding: 12px 24px; border-radius: 30px; border: none; background: #fff; color: #000; font-size: 1rem; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="scene">
+        <div class="cube" id="cube">
+            <div class="face front">40min</div>
+            <div class="face back">60min</div>
+            <div class="face right">25min</div>
+            <div class="face left">10min</div>
+        </div>
+    </div>
+
+    <div id="timer-display">00:00</div>
+    <div id="msg">点击下方按钮授权重力感应</div>
+    <button id="start-btn">激活魔方</button>
+
+    <script>
+        let countdown;
+        let currentMode = null;
+        const cube = document.getElementById('cube');
+        const timerDisplay = document.getElementById('timer-display');
+        const msg = document.getElementById('msg');
+
+        function updateTimer(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function startCountdown(minutes) {
+            clearInterval(countdown);
+            let totalSeconds = minutes * 60;
+            updateTimer(totalSeconds);
+            
+            countdown = setInterval(() => {
+                totalSeconds--;
+                updateTimer(totalSeconds);
+                if (totalSeconds <= 0) {
+                    navigator.vibrate?.(500); // 震动提示
+                    startCountdown(minutes); // 无限循环
+                }
+            }, 1000);
+        }
+
+        function handleOrientation(event) {
+            let beta = event.beta;  // 前后倾斜 (-180 到 180)
+            let gamma = event.gamma; // 左右倾斜 (-90 到 90)
+            let newMode = null;
+            let rotation = "";
+
+            // 简单的判定逻辑：判断哪个面“朝上”
+            if (beta > 45) { newMode = 40; rotation = "rotateX(-90deg)"; }
+            else if (beta < -45) { newMode = 60; rotation = "rotateX(90deg)"; }
+            else if (gamma > 45) { newMode = 25; rotation = "rotateY(-90deg)"; }
+            else if (gamma < -45) { newMode = 10; rotation = "rotateY(90deg)"; }
+            else { newMode = null; rotation = "rotateY(0deg)"; }
+
+            if (newMode !== currentMode) {
+                currentMode = newMode;
+                cube.style.transform = rotation;
+                if (newMode) {
+                    startCountdown(newMode);
+                    msg.innerText = `正在循环计时：${newMode} 分钟`;
+                } else {
+                    clearInterval(countdown);
+                    timerDisplay.innerText = "已暂停";
+                    msg.innerText = "请翻转手机以开始计时";
+                }
+            }
+        }
+
+        document.getElementById('start-btn').onclick = function() {
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                DeviceOrientationEvent.requestPermission()
+                    .then(state => {
+                        if (state === 'granted') window.addEventListener('deviceorientation', handleOrientation);
+                    });
+            } else {
+                window.addEventListener('deviceorientation', handleOrientation);
+            }
+            this.style.display = 'none';
+        };
+    </script>
+</body>
+</html>

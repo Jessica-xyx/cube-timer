@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>实体纹理魔方计时器-修复版</title>
+    <title>实体纹理魔方计时器-完美控制版</title>
     <style>
         :root { --size: 180px; }
         body { margin: 0; background: #000; color: white; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; touch-action: none; overflow: hidden; }
@@ -18,7 +18,7 @@
             display: flex; align-items: center; justify-content: center;
         }
         
-        /* 静态小字贴图 - 调整层级确保可见 */
+        /* 静态小字贴图 */
         .label-ring { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
         .label-ring span {
             position: absolute; font-size: 12px; font-weight: 800; opacity: 0.6;
@@ -46,8 +46,12 @@
         #unit { font-size: 12px; font-weight: bold; opacity: 0.8; letter-spacing: 1px; }
 
         #timer-display { font-size: 5.5rem; font-weight: 100; font-variant-numeric: tabular-nums; }
-        .controls { display: flex; gap: 20px; margin-bottom: 40px; }
-        button { width: 75px; height: 50px; border-radius: 15px; border: 1px solid #333; background: #1a1a1a; color: white; font-weight: bold; cursor: pointer; }
+        
+        /* 两个按钮的设计 */
+        .controls { display: flex; gap: 30px; margin-bottom: 40px; }
+        .btn { width: 100px; height: 50px; border-radius: 25px; border: 1.5px solid #444; background: transparent; color: white; font-weight: bold; font-size: 16px; transition: all 0.2s; }
+        #main-btn { border-color: #2ed573; color: #2ed573; } /* 开始/暂停按钮 */
+        #reset-btn { border-color: #ff4757; color: #ff4757; } /* 重置按钮 */
     </style>
 </head>
 <body>
@@ -83,9 +87,8 @@
     </div>
 
     <div class="controls">
-        <button id="reset-btn">重置</button>
-        <button id="start-btn" style="color:#2ed573; border-color:#2ed573">开始</button>
-        <button id="pause-btn" style="color:#ffa502; border-color:#ffa502">暂停</button>
+        <button class="btn" id="reset-btn">重置</button>
+        <button class="btn" id="main-btn">开始</button>
     </div>
 
     <script>
@@ -96,8 +99,9 @@
         const overlay = document.getElementById('overlay');
         const bigNum = document.getElementById('big-num');
         const timerDisplay = document.getElementById('timer-display');
+        const mainBtn = document.getElementById('main-btn');
 
-        // 交互：旋转
+        // 旋转交互
         document.addEventListener('touchstart', e => {
             startX = e.touches[0].pageX; startY = e.touches[0].pageY;
             cube.style.transition = 'none';
@@ -123,19 +127,24 @@
             let nx = ((Math.round(rx / 90) % 4) + 4) % 4;
             let ny = ((Math.round(ry / 90) % 4) + 4) % 4;
             let time = 40;
+
+            // 修正绑定关系：nx=1是往下滑(Top)，nx=3是往上滑(Bottom)
             if (nx === 0) time = [40, 10, 60, 25][ny];
-            else if (nx === 1) time = 30;
+            else if (nx === 1) time = 30; // Top
             else if (nx === 2) time = [60, 25, 40, 10][ny];
-            else if (nx === 3) time = 90;
+            else if (nx === 3) time = 90; // Bottom
 
             bigNum.innerText = time;
             overlay.style.opacity = "1";
             
-            // 只有当计时器没在运行时，才切换初始时间
+            // 只有计时器停止时才同步时间
             if (!isRunning) {
                 currentTargetTime = time;
                 timeLeft = time * 60;
                 updateDisplay();
+                mainBtn.innerText = "开始";
+                mainBtn.style.color = "#2ed573";
+                mainBtn.style.borderColor = "#2ed573";
             }
         }
 
@@ -145,41 +154,52 @@
             timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // --- 核心修复：计时控制 ---
-        
-        function startTimer() {
-            if (isRunning || timeLeft <= 0) return;
-            isRunning = true;
-            countdown = setInterval(() => {
-                if (timeLeft > 0) {
-                    timeLeft--;
-                    updateDisplay();
-                } else {
-                    clearInterval(countdown);
-                    isRunning = false;
-                    // 循环逻辑
-                    timeLeft = currentTargetTime * 60;
-                    startTimer();
-                }
-            }, 1000);
-        }
-
-        function pauseTimer() {
-            clearInterval(countdown);
-            isRunning = false;
+        // 按钮控制逻辑
+        function toggleMain() {
+            if (isRunning) {
+                // 运行中 -> 暂停
+                clearInterval(countdown);
+                isRunning = false;
+                mainBtn.innerText = "继续";
+                mainBtn.style.color = "#ffa502";
+                mainBtn.style.borderColor = "#ffa502";
+            } else {
+                // 暂停/未开始 -> 开始
+                if (timeLeft <= 0) return;
+                isRunning = true;
+                mainBtn.innerText = "暂停";
+                mainBtn.style.color = "#ffa502";
+                mainBtn.style.borderColor = "#ffa502";
+                
+                countdown = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        // 结束循环
+                        clearInterval(countdown);
+                        isRunning = false;
+                        timeLeft = currentTargetTime * 60;
+                        toggleMain(); // 自动重新开始
+                    }
+                }, 1000);
+            }
         }
 
         function resetTimer() {
-            pauseTimer();
+            clearInterval(countdown);
+            isRunning = false;
             timeLeft = currentTargetTime * 60;
             updateDisplay();
+            mainBtn.innerText = "开始";
+            mainBtn.style.color = "#2ed573";
+            mainBtn.style.borderColor = "#2ed573";
         }
 
-        document.getElementById('start-btn').onclick = startTimer;
-        document.getElementById('pause-btn').onclick = pauseTimer;
+        mainBtn.onclick = toggleMain;
         document.getElementById('reset-btn').onclick = resetTimer;
 
-        // 初始化显示
+        // 初始化
         updateTargetFromRotation();
     </script>
 </body>

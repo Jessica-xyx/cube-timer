@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>物理魔方计时器</title>
+    <title>物理姿态修正计时器</title>
     <style>
         :root { --size: 180px; }
-        body { margin: 0; background: #000; color: white; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; touch-action: none; overflow: hidden; transition: background 0.8s; }
+        body { margin: 0; background: #000; color: white; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; touch-action: none; overflow: hidden; }
         
         .scene { width: var(--size); height: var(--size); perspective: 1000px; }
         .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
@@ -19,15 +19,24 @@
             border: 2px solid rgba(255,255,255,0.1);
         }
 
-        /* 强制文字永远正向且滑动时消失 */
-        .text-fix { 
-            display: block; text-align: center; font-size: 36px; 
+        /* 核心改动：文字层 */
+        .text-wrapper {
             transition: opacity 0.3s;
-            transform: none !important; /* 不随魔方倾斜 */
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .text-fix { 
+            display: block; 
+            text-align: center; 
+            font-size: 38px;
+            /* 重点：我们通过 JS 动态赋予一个抵消旋转 */
         }
         small { font-size: 14px; display: block; }
         
-        /* 物理面的颜色与位置绑定 */
+        /* 颜色保持不变 */
         .front  { transform: rotateY(  0deg) translateZ(90px); background: #ff4757; } 
         .back   { transform: rotateY(180deg) translateZ(90px); background: #2ed573; } 
         .right  { transform: rotateY( 90deg) translateZ(90px); background: #1e90ff; } 
@@ -45,17 +54,16 @@
 
     <div id="display-area">
         <div id="timer-display">00:00</div>
-        <div id="current-mode">滑动拨动魔方</div>
     </div>
 
     <div class="scene">
         <div class="cube" id="cube">
-            <div class="face front"><span class="text-fix">40<small>MIN</small></span></div>
-            <div class="face back"><span class="text-fix">60<small>MIN</small></span></div>
-            <div class="face right"><span class="text-fix">25<small>MIN</small></span></div>
-            <div class="face left"><span class="text-fix">10<small>MIN</small></span></div>
-            <div class="face top"><span class="text-fix">30<small>MIN</small></span></div>
-            <div class="face bottom"><span class="text-fix">90<small>MIN</small></span></div>
+            <div class="face front"><div class="text-wrapper"><span class="text-fix">40<small>MIN</small></span></div></div>
+            <div class="face back"><div class="text-wrapper"><span class="text-fix">60<small>MIN</small></span></div></div>
+            <div class="face right"><div class="text-wrapper"><span class="text-fix">25<small>MIN</small></span></div></div>
+            <div class="face left"><div class="text-wrapper"><span class="text-fix">10<small>MIN</small></span></div></div>
+            <div class="face top"><div class="text-wrapper"><span class="text-fix">30<small>MIN</small></span></div></div>
+            <div class="face bottom"><div class="text-wrapper"><span class="text-fix">90<small>MIN</small></span></div></div>
         </div>
     </div>
 
@@ -66,76 +74,82 @@
     </div>
 
     <script>
-        let rx = 0, ry = 0; // 当前旋转角度
+        let rx = 0, ry = 0;
         let startX, startY;
         let countdown, timeLeft = 0, isRunning = false, currentTargetTime = 40;
 
         const cube = document.getElementById('cube');
         const timerDisplay = document.getElementById('timer-display');
-        const texts = document.querySelectorAll('.text-fix');
-
-        // 设置文字显示/隐藏
-        function setVisible(v) { texts.forEach(t => t.style.opacity = v ? "1" : "0"); }
+        const wrappers = document.querySelectorAll('.text-wrapper');
 
         document.addEventListener('touchstart', e => {
             startX = e.touches[0].pageX; startY = e.touches[0].pageY;
             cube.style.transition = 'none';
-            setVisible(false);
+            wrappers.forEach(w => w.style.opacity = "0");
         });
 
         document.addEventListener('touchmove', e => {
             let dx = e.touches[0].pageX - startX;
             let dy = e.touches[0].pageY - startY;
-            ry += dx * 0.5;
-            rx -= dy * 0.5;
+            ry += dx * 0.5; rx -= dy * 0.5;
             cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
             startX = e.touches[0].pageX; startY = e.touches[0].pageY;
         });
 
         document.addEventListener('touchend', () => {
             cube.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
-            // 吸附到 90 度
             rx = Math.round(rx / 90) * 90;
             ry = Math.round(ry / 90) * 90;
             cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
             
-            // 核心逻辑：判断当前哪一面正对屏幕
-            setTimeout(() => {
-                calculateFace();
-                setVisible(true);
-            }, 300);
+            // 等动画快结束时，进行“像素级”姿态校正
+            setTimeout(autoAlignText, 300);
         });
 
-        function calculateFace() {
-            // 将角度映射为 0, 1, 2, 3 的索引
-            let nx = ((Math.round(rx / 90) % 4) + 4) % 4;
-            let ny = ((Math.round(ry / 90) % 4) + 4) % 4;
+        function autoAlignText() {
+            // 获取魔方当前相对于页面的角度
+            // 我们通过识别哪一面在当前视图中最靠前来确定时间
+            const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+            let bestFaceIndex = 0;
+            let maxZ = -Infinity;
 
+            // 物理检测：哪个面离用户最近
+            // CSS 3D 下，我们可以利用矩阵计算，但为了简单，我们还是用角度映射
+            // 解决你说的“绕圈”问题：对角度取模，将其归一化到 0-360
+            let normX = ((Math.round(rx / 90) % 4) + 4) % 4;
+            let normY = ((Math.round(ry / 90) % 4) + 4) % 4;
+
+            let timeMap = [40, 10, 60, 25]; // 默认水平映射
             let time = 40;
-            let bgColor = "#000";
 
-            if (nx === 0) { // 水平转动
-                const map = [40, 10, 60, 25]; // 前、左、后、右
-                time = map[ny];
-            } else if (nx === 1) { // 往下翻 (露出 Top)
-                time = 30;
-            } else if (nx === 2) { // 翻转 180 度
-                const map = [60, 25, 40, 10];
-                time = map[ny];
-            } else if (nx === 3) { // 往上翻 (露出 Bottom)
-                time = 90;
-            }
+            if (normX === 0) time = [40, 10, 60, 25][normY];
+            else if (normX === 1) time = 30;
+            else if (normX === 2) time = [60, 25, 40, 10][normY];
+            else if (normX === 3) time = 90;
+
+            // 【黑科技修正】：不论你怎么绕圈，文字的 rotateZ 只由它最终的物理倒立状态决定
+            wrappers.forEach((w, i) => {
+                let correction = 0;
+                // 检测 X 轴翻转状态。如果是翻转了 180 度（normX 为 2），
+                // 且当前是侧面或背面，文字就需要反转。
+                if (normX === 2) {
+                    correction = 180;
+                }
+                
+                // 处理水平绕圈 (ry) 对文字的影响
+                // 所有的侧面文字在水平旋转时都应该抵消 ry 的视觉偏转
+                w.style.transform = `rotateZ(${-ry + (normX === 2 ? 180 : 0)}deg)`;
+                w.style.opacity = "1";
+            });
 
             currentTargetTime = time;
             if (!isRunning) {
                 timeLeft = time * 60;
                 updateDisplay();
-                // 自动切换背景颜色，增强反馈
-                const colors = {40:"#b33939", 60:"#218c74", 25:"#227093", 10:"#cc8e35", 30:"#6c5ce7", 90:"#e84393"};
-                document.body.style.background = colors[time] || "#000";
             }
         }
 
+        // 基础功能函数
         function updateDisplay() {
             const m = Math.floor(timeLeft / 60);
             const s = timeLeft % 60;
@@ -152,8 +166,8 @@
                 } else {
                     clearInterval(countdown);
                     isRunning = false;
-                    timeLeft = currentTargetTime * 60; // 循环
-                    startTimer();
+                    timeLeft = currentTargetTime * 60;
+                    startTimer(); // 循环
                     if(navigator.vibrate) navigator.vibrate(500);
                 }
             }, 1000);
@@ -166,7 +180,7 @@
             timeLeft = currentTargetTime * 60; updateDisplay();
         };
 
-        calculateFace();
+        autoAlignText();
     </script>
 </body>
 </html>

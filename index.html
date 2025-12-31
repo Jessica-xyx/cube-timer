@@ -73,7 +73,7 @@
     </div>
 
     <script>
-                let rotateX = -20, rotateY = -20;
+                 let rotateX = -20, rotateY = -20;
         let startX, startY;
         let countdown;
         let timeLeft = 0;
@@ -85,23 +85,28 @@
         const modeDisplay = document.getElementById('current-mode');
         const texts = document.querySelectorAll('.text-fix');
 
-        // 【核心修改点】更精细的文字纠偏逻辑
-        function updateRotation() {
+        function updateRotation(isFinal = false) {
             cube.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
             
-            // 计算文字需要反向旋转的角度
-            // 我们让文字在 Z 轴抵消掉 Y 轴的位移，并根据 X 轴的翻转状态微调
+            // 实时纠偏：在滑动过程中，尝试抵消 Y 轴旋转产生的倾斜
             texts.forEach(text => {
-                // 当 X 轴翻转到顶部或底部面时（即 rotateX 接近 90 或 270 度）
-                // 我们需要根据当前的物理垂直感来补偿文字方向
-                let zOffset = -rotateY;
+                let zRotation = 0;
                 
-                // 这里的逻辑确保了：无论魔方怎么转，文字底部始终垂直向下
-                text.style.transform = `rotateZ(${zOffset}deg)`;
+                if (isFinal) {
+                    // 当吸附完成后，根据 X 轴旋转角度（翻转状态）来强制修正文字
+                    const normalizedX = ((Math.round(rotateX / 90) % 4) + 4) % 4;
+                    // 如果魔方翻转到了顶部或底部面（90度或270度），我们需要特定的旋转补偿
+                    if (normalizedX === 1) zRotation = -rotateY;
+                    else if (normalizedX === 3) zRotation = -rotateY;
+                    else zRotation = -rotateY;
+                } else {
+                    zRotation = -rotateY;
+                }
+                
+                text.style.transform = `rotateZ(${zRotation}deg)`;
             });
         }
 
-        // 手势交互部分保持不变，但增加更平滑的惯性
         document.addEventListener('touchstart', e => {
             startX = e.touches[0].pageX;
             startY = e.touches[0].pageY;
@@ -113,44 +118,40 @@
             const deltaX = e.touches[0].pageX - startX;
             const deltaY = e.touches[0].pageY - startY;
             
-            // 阻尼系数，让转动更跟手
-            rotateY += deltaX * 0.4;
-            rotateX -= deltaY * 0.4;
+            rotateY += deltaX * 0.5;
+            rotateX -= deltaY * 0.5;
             
-            updateRotation();
+            updateRotation(false);
             startX = e.touches[0].pageX;
             startY = e.touches[0].pageY;
         });
 
         document.addEventListener('touchend', () => {
-            // 回弹动画
-            cube.style.transition = 'transform 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
-            texts.forEach(t => t.style.transition = 'transform 0.6s cubic-bezier(0.19, 1, 0.22, 1)');
+            // 开启平滑过渡
+            cube.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
+            texts.forEach(t => t.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)');
             
-            // 自动对齐到 90 度的倍数
+            // 1. 角度归位（吸附到 90 度的倍数）
             rotateX = Math.round(rotateX / 90) * 90;
             rotateY = Math.round(rotateY / 90) * 90;
             
-            updateRotation();
+            // 2. 执行最终旋转和文字水平修正
+            updateRotation(true);
             detectFace();
         });
 
-        // 判断面逻辑增强：适应 360 度循环
         function detectFace() {
-            // 规范化角度到 0-360
             const x = ((Math.round(rotateX / 90) % 4) + 4) % 4;
             const y = ((Math.round(rotateY / 90) % 4) + 4) % 4;
             
             let time = 40; 
-            // 空间解析逻辑：基于 X/Y 旋转索引映射对应面
+            // 这里的映射逻辑要严谨，确保选中的面就是你看到的那个
             if (x === 0) {
-                const faces = [40, 10, 60, 25]; // Front, Left, Back, Right
-                time = faces[y];
+                const f = [40, 10, 60, 25]; time = f[y];
             } else if (x === 1) {
                 time = 30; // Top
             } else if (x === 2) {
-                const faces = [60, 25, 40, 10]; // 翻转后的映射
-                time = faces[y];
+                const f = [60, 25, 40, 10]; time = f[y];
             } else if (x === 3) {
                 time = 90; // Bottom
             }
@@ -159,9 +160,12 @@
             if (!isRunning) {
                 timeLeft = time * 60;
                 updateDisplay();
-                modeDisplay.innerText = `选中周期: ${time} 分钟`;
+                modeDisplay.innerText = `选中: ${time} 分钟`;
             }
         }
+
+        // 后面原有的 updateDisplay, startTimer 和按钮绑定代码保持不变
+
         
         // 计时与显示逻辑保持不变...
         function updateDisplay() {

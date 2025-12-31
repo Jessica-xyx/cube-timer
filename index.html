@@ -3,55 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>实体纹理魔方计时器-完美控制版</title>
+    <title>魔方计时器-终极修正</title>
     <style>
         :root { --size: 180px; }
         body { margin: 0; background: #000; color: white; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; touch-action: none; overflow: hidden; }
+        #timer-display { font-size: 5.5rem; font-weight: 100; font-variant-numeric: tabular-nums; }
         
+        /* 3D 场景 */
         .scene { width: var(--size); height: var(--size); perspective: 1000px; position: relative; }
         .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+        .face { position: absolute; width: var(--size); height: var(--size); border-radius: 26px; backface-visibility: hidden; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
         
-        .face { 
-            position: absolute; width: var(--size); height: var(--size); 
-            border-radius: 26px; backface-visibility: hidden; 
-            border: 1px solid rgba(255,255,255,0.2);
-            display: flex; align-items: center; justify-content: center;
-        }
-        
-        /* 静态小字贴图 */
+        /* 小字贴图 */
         .label-ring { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-        .label-ring span {
-            position: absolute; font-size: 12px; font-weight: 800; opacity: 0.6;
-            color: #fff; text-transform: uppercase; white-space: nowrap;
-        }
+        .label-ring span { position: absolute; font-size: 12px; font-weight: 800; opacity: 0.6; color: #fff; text-transform: uppercase; }
         .label-ring .t { top: 12px; left: 50%; transform: translateX(-50%); }
         .label-ring .b { bottom: 12px; left: 50%; transform: translateX(-50%) rotate(180deg); }
         .label-ring .l { left: 12px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
         .label-ring .r { right: 12px; top: 50%; transform: translateY(-50%) rotate(90deg); }
 
-        /* 颜色配置 */
+        /* 物理面配置 */
         .f-front  { transform: rotateY(  0deg) translateZ(90px); background: #ff4757; } 
         .f-back   { transform: rotateY(180deg) translateZ(90px); background: #2ed573; } 
         .f-right  { transform: rotateY( 90deg) translateZ(90px); background: #1e90ff; } 
         .f-left   { transform: rotateY(-90deg) translateZ(90px); background: #ffa502; } 
-        .f-top    { transform: rotateX( 90deg) translateZ(90px); background: #a29bfe; } 
-        .f-bottom { transform: rotateX(-90deg) translateZ(90px); background: #fd79a8; }
+        .f-top    { transform: rotateX( 90deg) translateZ(90px); background: #a29bfe; } /* 30 MIN */
+        .f-bottom { transform: rotateX(-90deg) translateZ(90px); background: #fd79a8; } /* 90 MIN */
 
-        /* 2D 悬浮主文字 */
-        .overlay-text {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 100; text-align: center; pointer-events: none; transition: opacity 0.3s;
-        }
+        /* 2D 悬浮大字 */
+        .overlay-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; text-align: center; pointer-events: none; transition: opacity 0.3s; }
         #big-num { font-size: 56px; font-weight: 900; display: block; line-height: 0.8; }
-        #unit { font-size: 12px; font-weight: bold; opacity: 0.8; letter-spacing: 1px; }
+        #unit { font-size: 12px; font-weight: bold; opacity: 0.8; }
 
-        #timer-display { font-size: 5.5rem; font-weight: 100; font-variant-numeric: tabular-nums; }
-        
-        /* 两个按钮的设计 */
+        /* 两个按钮控制 */
         .controls { display: flex; gap: 30px; margin-bottom: 40px; }
-        .btn { width: 100px; height: 50px; border-radius: 25px; border: 1.5px solid #444; background: transparent; color: white; font-weight: bold; font-size: 16px; transition: all 0.2s; }
-        #main-btn { border-color: #2ed573; color: #2ed573; } /* 开始/暂停按钮 */
-        #reset-btn { border-color: #ff4757; color: #ff4757; } /* 重置按钮 */
+        .btn { width: 100px; height: 50px; border-radius: 25px; border: 1.5px solid #444; background: transparent; color: white; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -59,36 +45,20 @@
     <div id="timer-display">00:00</div>
 
     <div class="scene">
-        <div class="overlay-text" id="overlay">
-            <span id="big-num">40</span>
-            <span id="unit">MINUTES</span>
-        </div>
-        
+        <div class="overlay-text" id="overlay"><span id="big-num">40</span><span id="unit">MINUTES</span></div>
         <div class="cube" id="cube">
-            <div class="face f-front">
-                <div class="label-ring"><span class="t">40 MIN</span><span class="b">40 MIN</span><span class="l">40 MIN</span><span class="r">40 MIN</span></div>
-            </div>
-            <div class="face f-back">
-                <div class="label-ring"><span class="t">60 MIN</span><span class="b">60 MIN</span><span class="l">60 MIN</span><span class="r">60 MIN</span></div>
-            </div>
-            <div class="face f-right">
-                <div class="label-ring"><span class="t">25 MIN</span><span class="b">25 MIN</span><span class="l">25 MIN</span><span class="r">25 MIN</span></div>
-            </div>
-            <div class="face f-left">
-                <div class="label-ring"><span class="t">10 MIN</span><span class="b">10 MIN</span><span class="l">10 MIN</span><span class="r">10 MIN</span></div>
-            </div>
-            <div class="face f-top">
-                <div class="label-ring"><span class="t">30 MIN</span><span class="b">30 MIN</span><span class="l">30 MIN</span><span class="r">30 MIN</span></div>
-            </div>
-            <div class="face f-bottom">
-                <div class="label-ring"><span class="t">90 MIN</span><span class="b">90 MIN</span><span class="l">90 MIN</span><span class="r">90 MIN</span></div>
-            </div>
+            <div class="face f-front"><div class="label-ring"><span class="t">40 MIN</span><span class="b">40 MIN</span><span class="l">40 MIN</span><span class="r">40 MIN</span></div></div>
+            <div class="face f-back"><div class="label-ring"><span class="t">60 MIN</span><span class="b">60 MIN</span><span class="l">60 MIN</span><span class="r">60 MIN</span></div></div>
+            <div class="face f-right"><div class="label-ring"><span class="t">25 MIN</span><span class="b">25 MIN</span><span class="l">25 MIN</span><span class="r">25 MIN</span></div></div>
+            <div class="face f-left"><div class="label-ring"><span class="t">10 MIN</span><span class="b">10 MIN</span><span class="l">10 MIN</span><span class="r">10 MIN</span></div></div>
+            <div class="face f-top"><div class="label-ring"><span class="t">30 MIN</span><span class="b">30 MIN</span><span class="l">30 MIN</span><span class="r">30 MIN</span></div></div>
+            <div class="face f-bottom"><div class="label-ring"><span class="t">90 MIN</span><span class="b">90 MIN</span><span class="l">90 MIN</span><span class="r">90 MIN</span></div></div>
         </div>
     </div>
 
     <div class="controls">
-        <button class="btn" id="reset-btn">重置</button>
-        <button class="btn" id="main-btn">开始</button>
+        <button class="btn" id="reset-btn" style="color:#ff4757; border-color:#ff4757">重置</button>
+        <button class="btn" id="main-btn" style="color:#2ed573; border-color:#2ed573">开始</button>
     </div>
 
     <script>
@@ -101,7 +71,6 @@
         const timerDisplay = document.getElementById('timer-display');
         const mainBtn = document.getElementById('main-btn');
 
-        // 旋转交互
         document.addEventListener('touchstart', e => {
             startX = e.touches[0].pageX; startY = e.touches[0].pageY;
             cube.style.transition = 'none';
@@ -109,9 +78,8 @@
         });
 
         document.addEventListener('touchmove', e => {
-            let dx = e.touches[0].pageX - startX;
-            let dy = e.touches[0].pageY - startY;
-            ry += dx * 0.5; rx -= dy * 0.5;
+            ry += (e.touches[0].pageX - startX) * 0.5;
+            rx -= (e.touches[0].pageY - startY) * 0.5;
             cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
             startX = e.touches[0].pageX; startY = e.touches[0].pageY;
         });
@@ -120,24 +88,23 @@
             cube.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
             rx = Math.round(rx / 90) * 90; ry = Math.round(ry / 90) * 90;
             cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-            setTimeout(updateTargetFromRotation, 300);
+            setTimeout(updateTarget, 300);
         });
 
-        function updateTargetFromRotation() {
+        function updateTarget() {
             let nx = ((Math.round(rx / 90) % 4) + 4) % 4;
             let ny = ((Math.round(ry / 90) % 4) + 4) % 4;
+            
             let time = 40;
-
-            // 修正绑定关系：nx=1是往下滑(Top)，nx=3是往上滑(Bottom)
+            // 修正映射：nx=1是露出了底面（Bottom），nx=3是露出了顶面（Top）
             if (nx === 0) time = [40, 10, 60, 25][ny];
-            else if (nx === 1) time = 30; // Top
+            else if (nx === 1) time = 90; // 对应 Bottom 粉色面
             else if (nx === 2) time = [60, 25, 40, 10][ny];
-            else if (nx === 3) time = 90; // Bottom
+            else if (nx === 3) time = 30; // 对应 Top 紫色面
 
             bigNum.innerText = time;
             overlay.style.opacity = "1";
             
-            // 只有计时器停止时才同步时间
             if (!isRunning) {
                 currentTargetTime = time;
                 timeLeft = time * 60;
@@ -154,39 +121,30 @@
             timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // 按钮控制逻辑
-        function toggleMain() {
+        mainBtn.onclick = () => {
             if (isRunning) {
-                // 运行中 -> 暂停
                 clearInterval(countdown);
                 isRunning = false;
                 mainBtn.innerText = "继续";
                 mainBtn.style.color = "#ffa502";
                 mainBtn.style.borderColor = "#ffa502";
             } else {
-                // 暂停/未开始 -> 开始
                 if (timeLeft <= 0) return;
                 isRunning = true;
                 mainBtn.innerText = "暂停";
                 mainBtn.style.color = "#ffa502";
                 mainBtn.style.borderColor = "#ffa502";
-                
                 countdown = setInterval(() => {
-                    if (timeLeft > 0) {
-                        timeLeft--;
-                        updateDisplay();
-                    } else {
-                        // 结束循环
-                        clearInterval(countdown);
-                        isRunning = false;
-                        timeLeft = currentTargetTime * 60;
-                        toggleMain(); // 自动重新开始
+                    if (timeLeft > 0) { timeLeft--; updateDisplay(); }
+                    else { 
+                        clearInterval(countdown); isRunning = false; 
+                        timeLeft = currentTargetTime * 60; mainBtn.onclick(); 
                     }
                 }, 1000);
             }
-        }
+        };
 
-        function resetTimer() {
+        document.getElementById('reset-btn').onclick = () => {
             clearInterval(countdown);
             isRunning = false;
             timeLeft = currentTargetTime * 60;
@@ -194,13 +152,9 @@
             mainBtn.innerText = "开始";
             mainBtn.style.color = "#2ed573";
             mainBtn.style.borderColor = "#2ed573";
-        }
+        };
 
-        mainBtn.onclick = toggleMain;
-        document.getElementById('reset-btn').onclick = resetTimer;
-
-        // 初始化
-        updateTargetFromRotation();
+        updateTarget();
     </script>
 </body>
 </html>

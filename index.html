@@ -3,26 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>极简魔方-北斗星空版</title>
+    <title>极简魔方计时器-北斗星空版</title>
     <style>
         :root { --size: 180px; }
-        body { margin: 0; background: #000; color: white; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; touch-action: none; overflow: hidden; position: relative; }
         
-        /* 星空画布 */
-        #star-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-        .constellation-line { stroke: rgba(255,255,255,0.15); stroke-width: 1; fill: none; transition: stroke-dashoffset 2s ease-in-out; }
-        .star-dot { fill: #fff; filter: drop-shadow(0 0 3px #fff); transition: opacity 1s; }
+        /* 基础样式 */
+        body { 
+            margin: 0; background: #000; color: white; 
+            font-family: -apple-system, sans-serif; height: 100vh; 
+            display: flex; flex-direction: column; align-items: center; 
+            justify-content: space-around; touch-action: none; overflow: hidden; 
+            position: relative; transition: background 0.3s;
+        }
 
         /* 闹钟特效 */
-        @keyframes alarm-bg { 0% { background: #000; } 50% { background: #200; } 100% { background: #000; } }
+        @keyframes alarm-bg { 0% { background: #000; } 50% { background: #300; } 100% { background: #000; } }
         body.alarm-active { animation: alarm-bg 0.6s infinite; }
 
-        #timer-display { font-size: 5.5rem; font-weight: 100; font-variant-numeric: tabular-nums; z-index: 10; }
+        /* 星空画布样式 */
+        #star-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .constellation-line { stroke: rgba(255,255,255,0.2); stroke-width: 1.5; fill: none; transition: stroke-dashoffset 2s ease-in-out; }
+        .star-dot { fill: #fff; filter: drop-shadow(0 0 3px #fff); transition: opacity 1s; }
+
+        /* 顶部大数字显示 */
+        #timer-display { font-size: 5.5rem; font-weight: 100; font-variant-numeric: tabular-nums; z-index: 10; position: relative; }
+
+        /* 3D 场景与魔方 */
         .scene { width: var(--size); height: var(--size); perspective: 1000px; position: relative; z-index: 5; }
         .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
-        .face { position: absolute; width: var(--size); height: var(--size); border-radius: 26px; backface-visibility: hidden; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; }
+        .face { position: absolute; width: var(--size); height: var(--size); border-radius: 26px; backface-visibility: hidden; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 
-        /* 颜色映射 */
+        /* 各面颜色配置 */
         .f-front  { transform: rotateY(0deg) translateZ(90px); background: #ff4757; } 
         .f-back   { transform: rotateY(180deg) translateZ(90px); background: #2ed573; } 
         .f-right  { transform: rotateY(90deg) translateZ(90px); background: #1e90ff; } 
@@ -30,30 +41,47 @@
         .f-top    { transform: rotateX(90deg) translateZ(90px); background: #a29bfe; } 
         .f-bottom { transform: rotateX(-90deg) translateZ(90px); background: #fd79a8; }
 
-        .overlay-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; text-align: center; pointer-events: none; }
-        #big-num { font-size: 56px; font-weight: 900; display: block; line-height: 0.8; }
-        #unit { font-size: 11px; font-weight: bold; opacity: 0.4; letter-spacing: 1px; }
+        /* 物理面小字样式 */
+        .label-ring { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+        .label-ring span { position: absolute; font-size: 11px; font-weight: 800; opacity: 0.5; color: #fff; text-transform: uppercase; }
+        .label-ring .t { top: 12px; left: 50%; transform: translateX(-50%); }
+        .label-ring .b { bottom: 12px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+        .label-ring .l { left: 12px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+        .label-ring .r { right: 12px; top: 50%; transform: translateY(-50%) rotate(90deg); }
 
-        .controls { display: flex; gap: 30px; margin-bottom: 40px; z-index: 20; }
-        .btn { width: 100px; height: 50px; border-radius: 25px; border: 1.5px solid #444; background: rgba(0,0,0,0.4); color: white; font-weight: bold; font-size: 15px; cursor: pointer; }
-        #stat-footer { position: absolute; bottom: 15px; font-size: 10px; opacity: 0.3; letter-spacing: 2px; }
+        /* 悬浮大字显示 */
+        .overlay-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; text-align: center; pointer-events: none; transition: opacity 0.3s; }
+        #big-num { font-size: 56px; font-weight: 900; display: block; line-height: 0.8; }
+        #unit { font-size: 11px; font-weight: bold; opacity: 0.6; letter-spacing: 1px; }
+
+        /* 按钮控制 */
+        .controls { display: flex; gap: 30px; margin-bottom: 40px; z-index: 20; position: relative; }
+        .btn { width: 100px; height: 50px; border-radius: 25px; border: 1.5px solid #444; background: rgba(0,0,0,0.6); color: white; font-weight: bold; font-size: 15px; cursor: pointer; backdrop-filter: blur(5px); -webkit-tap-highlight-color: transparent; }
+
+        /* 底部信息 */
+        #stat-footer { position: absolute; bottom: 20px; font-size: 10px; opacity: 0.3; letter-spacing: 2px; text-transform: uppercase; z-index: 10; }
     </style>
 </head>
 <body>
 
-    <svg id="star-canvas">
-        <path id="dipper-line" class="constellation-line" d="M 50,50 L 120,60 L 180,100 L 220,150 L 320,160 L 340,240 L 250,250 Z" style="display:none;" />
+    <svg id="star-canvas" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <path id="dipper-line" class="constellation-line" d="M 20,30 L 35,32 L 48,42 L 58,55 L 82,52 L 88,72 L 65,78" style="display:none;" />
         <g id="stars-group"></g>
     </svg>
 
     <div id="timer-display">00:00</div>
 
-    <div class="scene">
-        <div class="overlay-text"><span id="big-num">40</span><span id="unit">MINUTES</span></div>
+    <div class="scene" id="main-scene">
+        <div class="overlay-text" id="overlay">
+            <span id="big-num">40</span><span id="unit">MINUTES</span>
+        </div>
         <div class="cube" id="cube">
-            <div class="face f-front"></div><div class="face f-back"></div>
-            <div class="face f-right"></div><div class="face f-left"></div>
-            <div class="face f-top"></div><div class="face f-bottom"></div>
+            <div class="face f-front"><div class="label-ring"><span class="t">40 MIN</span><span class="b">40 MIN</span><span class="l">40 MIN</span><span class="r">40 MIN</span></div></div>
+            <div class="face f-back"><div class="label-ring"><span class="t">60 MIN</span><span class="b">60 MIN</span><span class="l">60 MIN</span><span class="r">60 MIN</span></div></div>
+            <div class="face f-right"><div class="label-ring"><span class="t">25 MIN</span><span class="b">25 MIN</span><span class="l">25 MIN</span><span class="r">25 MIN</span></div></div>
+            <div class="face f-left"><div class="label-ring"><span class="t">10 MIN</span><span class="b">10 MIN</span><span class="l">10 MIN</span><span class="r">10 MIN</span></div></div>
+            <div class="face f-top"><div class="label-ring"><span class="t">30 MIN</span><span class="b">30 MIN</span><span class="l">30 MIN</span><span class="r">30 MIN</span></div></div>
+            <div class="face f-bottom"><div class="label-ring"><span class="t">90 MIN</span><span class="b">90 MIN</span><span class="l">90 MIN</span><span class="r">90 MIN</span></div></div>
         </div>
     </div>
 
@@ -65,44 +93,33 @@
     <div id="stat-footer">THE BIG DIPPER: <span id="star-count">0</span> / 7</div>
 
     <script>
-        // --- 星座配置：北斗七星坐标 ---
+        // --- 1. 星座系统配置 ---
         const dipperStars = [
             {x: 20, y: 30}, {x: 35, y: 32}, {x: 48, y: 42}, 
             {x: 58, y: 55}, {x: 82, y: 52}, {x: 88, y: 72}, {x: 65, y: 78}
         ];
 
-        let rx = 0, ry = 0, startX, startY, isDragging = false;
-        const states = {
-            40: { left: 40 * 60, active: false, timer: null, alarming: false },
-            60: { left: 60 * 60, active: false, timer: null, alarming: false },
-            25: { left: 25 * 60, active: false, timer: null, alarming: false },
-            10: { left: 10 * 60, active: false, timer: null, alarming: false },
-            30: { left: 30 * 60, active: false, timer: null, alarming: false },
-            90: { left: 90 * 60, active: false, timer: null, alarming: false }
-        };
-        let currentFaceTime = 40;
         let starCount = parseInt(localStorage.getItem('dipperCount') || '0');
 
-        function initStars() {
+        function initStarSystem() {
             const group = document.getElementById('stars-group');
             group.innerHTML = '';
             dipperStars.forEach((pos, i) => {
                 const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", pos.x + "vw");
-                circle.setAttribute("cy", pos.y + "vh");
-                circle.setAttribute("r", "2");
+                circle.setAttribute("cx", pos.x);
+                circle.setAttribute("cy", pos.y);
+                circle.setAttribute("r", "0.6");
                 circle.setAttribute("class", "star-dot");
-                circle.style.opacity = i < starCount ? "0.8" : "0.05";
+                circle.style.opacity = i < starCount ? "0.9" : "0.08";
                 group.appendChild(circle);
             });
-            checkLine();
+            checkConstellationLine();
         }
 
-        function checkLine() {
+        function checkConstellationLine() {
             if (starCount >= 7) {
                 const line = document.getElementById('dipper-line');
                 line.style.display = 'block';
-                // 计算路径长度实现绘制动画
                 const length = line.getTotalLength();
                 line.style.strokeDasharray = length;
                 line.style.strokeDashoffset = 0;
@@ -114,20 +131,33 @@
                 starCount++;
                 localStorage.setItem('dipperCount', starCount);
                 document.getElementById('star-count').innerText = starCount;
-                initStars();
+                initStarSystem();
             }
         }
 
-        // --- 核心计时逻辑 (同前) ---
+        // --- 2. 计时器核心逻辑 ---
+        let rx = 0, ry = 0, startX, startY, isDragging = false;
+        const states = {
+            40: { left: 40 * 60, active: false, timer: null, alarming: false },
+            60: { left: 60 * 60, active: false, timer: null, alarming: false },
+            25: { left: 25 * 60, active: false, timer: null, alarming: false },
+            10: { left: 10 * 60, active: false, timer: null, alarming: false },
+            30: { left: 30 * 60, active: false, timer: null, alarming: false },
+            90: { left: 90 * 60, active: false, timer: null, alarming: false }
+        };
+        let currentFaceTime = 40;
+
         const cube = document.getElementById('cube');
         const bigNum = document.getElementById('big-num');
+        const overlay = document.getElementById('overlay');
         const timerDisplay = document.getElementById('timer-display');
         const mainBtn = document.getElementById('main-btn');
 
+        // 旋转交互与防误触
         document.addEventListener('touchstart', e => {
             if (e.target.closest('.controls')) return;
             isDragging = true; startX = e.touches[0].pageX; startY = e.touches[0].pageY;
-            cube.style.transition = 'none';
+            cube.style.transition = 'none'; overlay.style.opacity = "0.2";
         });
         document.addEventListener('touchmove', e => {
             if (!isDragging) return;
@@ -147,9 +177,10 @@
             let nx = ((Math.round(rx / 90) % 4) + 4) % 4, ny = ((Math.round(ry / 90) % 4) + 4) % 4;
             let time = 40;
             if (nx === 0) time = [40, 10, 60, 25][ny];
-            else if (nx === 1) time = 90; else if (nx === 2) time = [60, 25, 40, 10][ny];
+            else if (nx === 1) time = 90; 
+            else if (nx === 2) time = [60, 25, 40, 10][ny];
             else if (nx === 3) time = 30; 
-            currentFaceTime = time; bigNum.innerText = time;
+            currentFaceTime = time; bigNum.innerText = time; overlay.style.opacity = "1";
             refreshUI();
         }
 
@@ -157,21 +188,29 @@
             const state = states[currentFaceTime];
             const m = Math.floor(state.left / 60), s = state.left % 60;
             timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            
             if (state.alarming) {
                 document.body.classList.add('alarm-active');
                 mainBtn.innerText = "完成";
+                mainBtn.style.background = "#fff"; mainBtn.style.color = "#000";
             } else {
                 document.body.classList.remove('alarm-active');
-                if (state.active) mainBtn.innerText = "暂停";
-                else mainBtn.innerText = (state.left === currentFaceTime * 60) ? "开始" : "继续";
+                mainBtn.style.background = "rgba(0,0,0,0.6)";
+                if (state.active) { mainBtn.innerText = "暂停"; mainBtn.style.color = "#ffa502"; }
+                else { 
+                    const isInit = state.left === currentFaceTime * 60;
+                    mainBtn.innerText = isInit ? "开始" : "继续"; 
+                    mainBtn.style.color = isInit ? "#2ed573" : "#ffa502";
+                }
             }
         }
 
-        mainBtn.onclick = () => {
+        mainBtn.onclick = (e) => {
+            e.stopPropagation();
             const state = states[currentFaceTime];
             if (state.alarming) {
                 state.alarming = false; state.left = currentFaceTime * 60;
-                lightNextStar(); // 重点：完成后点亮一颗星
+                lightNextStar(); // 完成任务，点亮星星
                 refreshUI(); return;
             }
             if (state.active) { clearInterval(state.timer); state.active = false; }
@@ -191,15 +230,16 @@
             refreshUI();
         };
 
-        document.getElementById('reset-btn').onclick = () => {
+        document.getElementById('reset-btn').onclick = (e) => {
+            e.stopPropagation();
             const state = states[currentFaceTime];
             clearInterval(state.timer); state.active = false; state.alarming = false;
             state.left = currentFaceTime * 60; refreshUI();
         };
 
-        // 启动执行
+        // --- 3. 初始引导 ---
         document.getElementById('star-count').innerText = starCount;
-        initStars();
+        initStarSystem();
         updateFaceLogic();
     </script>
 </body>

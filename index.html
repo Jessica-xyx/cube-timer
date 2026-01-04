@@ -3,13 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>六面独立计时器-加固版</title>
+    <title>六面独立计时器-星空版</title>
     <style>
         :root { --size: 180px; }
-        body { margin: 0; background: #000; color: white; font-family: -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; touch-action: none; overflow: hidden; }
-        #timer-display { font-size: 5.5rem; font-weight: 100; font-variant-numeric: tabular-nums; }
+        body { 
+            margin: 0; 
+            /* 修改为深邃径向背景 */
+            background: radial-gradient(circle at center, #001529 0%, #000 100%); 
+            color: white; 
+            font-family: -apple-system, sans-serif; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: space-around; 
+            touch-action: none; 
+            overflow: hidden; 
+        }
         
-        .scene { width: var(--size); height: var(--size); perspective: 1000px; position: relative; }
+        /* 星空画布层 */
+        #starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        #timer-display { font-size: 5.5rem; font-weight: 100; font-variant-numeric: tabular-nums; position: relative; z-index: 10; }
+        
+        .scene { width: var(--size); height: var(--size); perspective: 1000px; position: relative; z-index: 10; }
         .cube { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
         .face { position: absolute; width: var(--size); height: var(--size); border-radius: 26px; backface-visibility: hidden; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; }
         
@@ -32,10 +56,12 @@
         #unit { font-size: 12px; font-weight: bold; opacity: 0.8; }
 
         .controls { display: flex; gap: 30px; margin-bottom: 40px; position: relative; z-index: 999; }
-        .btn { width: 100px; height: 50px; border-radius: 25px; border: 1.5px solid #444; background: #000; color: white; font-weight: bold; font-size: 16px; cursor: pointer; touch-action: manipulation; }
+        .btn { width: 100px; height: 50px; border-radius: 25px; border: 1.5px solid #444; background: rgba(0,0,0,0.5); color: white; font-weight: bold; font-size: 16px; cursor: pointer; touch-action: manipulation; backdrop-filter: blur(5px); }
     </style>
 </head>
 <body>
+
+    <canvas id="starfield"></canvas>
 
     <div id="timer-display">00:00</div>
 
@@ -57,8 +83,60 @@
     </div>
 
     <script>
+        // --- 星空渲染核心逻辑 ---
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        // 从 localStorage 读取已有的星星，实现持久化
+        let stars = JSON.parse(localStorage.getItem('cube_stars')) || [];
+        let w, h;
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+            drawSky();
+        }
+
+        function drawSky() {
+            ctx.clearRect(0, 0, w, h);
+            stars.forEach((star, i) => {
+                // 画星点
+                ctx.beginPath();
+                ctx.arc(star.x * w, star.y * h, star.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.op})`;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = "white";
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // 每5颗星连成一个星座
+                if (i > 0 && i % 5 !== 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(stars[i-1].x * w, stars[i-1].y * h);
+                    ctx.lineTo(star.x * w, star.y * h);
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function addStar() {
+            stars.push({
+                x: Math.random(),
+                y: Math.random(),
+                size: Math.random() * 2 + 1,
+                op: Math.random() * 0.4 + 0.6
+            });
+            localStorage.setItem('cube_stars', JSON.stringify(stars));
+            drawSky();
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        // --- 星空逻辑结束 ---
+
         let rx = 0, ry = 0, startX, startY;
-        let isDragging = false; // 加固1：增加拖拽标志位
+        let isDragging = false; 
 
         const states = {
             40: { left: 40 * 60, active: false, timer: null },
@@ -77,11 +155,8 @@
         const timerDisplay = document.getElementById('timer-display');
         const mainBtn = document.getElementById('main-btn');
 
-        // 旋转交互加固
         document.addEventListener('touchstart', e => {
-            // 如果点的是按钮区域，直接跳过旋转逻辑
             if (e.target.closest('.controls')) return;
-            
             isDragging = true;
             startX = e.touches[0].pageX; startY = e.touches[0].pageY;
             cube.style.transition = 'none';
@@ -102,15 +177,12 @@
             cube.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
             rx = Math.round(rx / 90) * 90; ry = Math.round(ry / 90) * 90;
             cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
-            
-            // 加固2：延迟更新，避开按钮点击的瞬间
             setTimeout(updateFaceLogic, 300);
         });
 
         function updateFaceLogic() {
             let nx = ((Math.round(rx / 90) % 4) + 4) % 4;
             let ny = ((Math.round(ry / 90) % 4) + 4) % 4;
-            
             let time = 40;
             if (nx === 0) time = [40, 10, 60, 25][ny];
             else if (nx === 1) time = 90; 
@@ -126,7 +198,6 @@
         function refreshUI() {
             const state = states[currentFaceTime];
             updateDisplay(state.left);
-            
             if (state.active) {
                 mainBtn.innerText = "暂停";
                 mainBtn.style.color = "#ffa502";
@@ -145,11 +216,9 @@
             timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // 加固3：改用 pointerdown/up 混合 click 彻底解决移动端点击重置问题
         mainBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
             const state = states[currentFaceTime];
             if (state.active) {
                 clearInterval(state.timer);
@@ -159,14 +228,18 @@
                 state.timer = setInterval(() => {
                     if (state.left > 0) {
                         state.left--;
-                        // 只有当前视图还在这一面时，才更新大屏幕
                         if (currentFaceTime === parseInt(bigNum.innerText)) {
                             updateDisplay(state.left);
                         }
                     } else {
+                        // 计时结束：清除定时器
                         clearInterval(state.timer);
                         state.active = false;
                         state.left = currentFaceTime * 60;
+                        
+                        // 【新增】每完成一次计时，点亮一颗星并绘制星座连线
+                        addStar();
+                        
                         refreshUI();
                     }
                 }, 1000);

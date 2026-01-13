@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>星空魔方计时器</title>
     <style>
-        :root { --size: 180px; }
+        :root { --size: 220px; }
         body { 
             margin: 0; 
             background: #000; 
@@ -71,24 +71,61 @@
         }
 
         /* --- 视图切换按钮 --- */
-        #view-toggle {
+        #view-toggle, #customize-btn, #stats-btn {
             position: fixed;
-            top: 25px;
             right: 25px;
             z-index: 9999;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 13px;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* 让缩小和放大的过程变平滑 */
+            width: 150px; 
+            height: 54px; 
+            border-radius: 27px;
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 2.5px solid;
+            font-family: "Georgia", serif;
+            font-style: italic;
+            font-weight: bold; 
+            font-size: 17px; 
+            cursor: pointer; 
+            outline: none; 
+            box-shadow: 
+                0 10px 25px rgba(0,0,0,0.2),
+                inset 0 0 10px rgba(255,255,255,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        #view-toggle:active { 
-            transform: scale(0.9); 
-            background: rgba(255, 255, 255, 0.2); /* 点击时让背景稍微亮一点点 */ 
+        #view-toggle {
+            top: 25px;
+            color: #a29bfe;
+            border-color: rgba(162, 155, 254, 0.5);
+        }
+        #view-toggle:hover {
+            background: rgba(162, 155, 254, 0.2);
+            border-color: rgba(162, 155, 254, 1);
+        }
+        #customize-btn {
+            top: 90px;
+            color: #fdcb6e;
+            border-color: rgba(253, 203, 110, 0.5);
+        }
+        #customize-btn:hover {
+            background: rgba(253, 203, 110, 0.2);
+            border-color: rgba(253, 203, 110, 1);
+        }
+        #stats-btn {
+            top: 155px;
+            color: #74b9ff;
+            border-color: rgba(116, 185, 255, 0.5);
+        }
+        #stats-btn:hover {
+            background: rgba(116, 185, 255, 0.2);
+            border-color: rgba(116, 185, 255, 1);
+        }
+        #view-toggle:active, #customize-btn:active, #stats-btn:active { 
+            transform: scale(0.9) translateY(2px); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         /* 原有样式保持不变 */
@@ -155,19 +192,21 @@
         .label-ring .l { left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
         .label-ring .r { right: 10px; top: 50%; transform: translateY(-50%) rotate(90deg); }
 
-        .f-front  { transform: rotateY(0deg) translateZ(90px);   background: radial-gradient(circle at 20% 20%, #ffc8dd, #ffafcc 60%, #bde0fe);   } 
-        .f-back   { transform: rotateY(180deg) translateZ(90px); background: radial-gradient(circle at 70% 30%, #cdb4db, #bde0fe 50%, #a2d2ff); } 
-        .f-right  { transform: rotateY(90deg) translateZ(90px);  background: radial-gradient(circle at 30% 80%, #48cae4, #0077b6 70%, #023e8a);  } 
-        .f-left   { transform: rotateY(-90deg) translateZ(90px); background: radial-gradient(circle at 50% 50%, #ffb4a2, #e5989b 70%, #6d597a);   } 
-        .f-top    { transform: rotateX(90deg) translateZ(90px);  background: radial-gradient(circle at 30% 20%, #95d5b2, #40916c 60%, #1b4332);   } 
-        .f-bottom { transform: rotateX(-90deg) translateZ(90px); background: radial-gradient(circle at 80% 80%, #5c677d, #33415c 80%, #001219);   }
+        .f-front  { transform: rotateY(0deg) translateZ(110px);   background: radial-gradient(circle at 20% 20%, #ffc8dd, #ffafcc 60%, #bde0fe);   } 
+        .f-back   { transform: rotateY(180deg) translateZ(110px); background: radial-gradient(circle at 70% 30%, #cdb4db, #bde0fe 50%, #a2d2ff); } 
+        .f-right  { transform: rotateY(90deg) translateZ(110px);  background: radial-gradient(circle at 30% 80%, #48cae4, #0077b6 70%, #023e8a);  } 
+        .f-left   { transform: rotateY(-90deg) translateZ(110px); background: radial-gradient(circle at 50% 50%, #ffb4a2, #e5989b 70%, #6d597a);   } 
+        .f-top    { transform: rotateX(90deg) translateZ(110px);  background: radial-gradient(circle at 30% 20%, #95d5b2, #40916c 60%, #1b4332);   } 
+        .f-bottom { transform: rotateX(-90deg) translateZ(110px); background: radial-gradient(circle at 80% 80%, #5c677d, #33415c 80%, #001219);   }
 
         .overlay-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; text-align: center; pointer-events: none; transition: opacity 0.3s; }
         #big-num { font-size: 56px; font-weight: 200; 
             font-family: "Georgia", serif;
             color: rgba(255,255,255,0.9);
-            display: block; line-height: 0.8; 
-
+            display: block; 
+            line-height: 1.2; 
+            letter-spacing: 2px;
+            white-space: nowrap;
         }
         #unit { 
             font-size: 11px; 
@@ -243,6 +282,205 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
+        /* 自定义魔方模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(15px);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            color: white;
+            font-family: "Georgia", serif;
+            margin: 0;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+        .face-config {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .face-config h3 {
+            color: white;
+            font-family: "Georgia", serif;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+        .face-config label {
+            display: block;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .face-config select, .face-config input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .face-config select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 35px;
+        }
+        .face-config select option {
+            background: rgba(20, 20, 40, 1);
+            color: white;
+            padding: 10px;
+        }
+        .face-config select:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.6);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .face-config input[type="number"] {
+            width: calc(60% - 5px);
+            display: inline-block;
+        }
+        .face-config select.time-unit {
+            width: calc(40% - 5px);
+            display: inline-block;
+        }
+        .time-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        .save-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(183, 228, 199, 0.3);
+            border: 2px solid rgba(183, 228, 199, 0.5);
+            color: #B7E4C7;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: "Georgia", serif;
+            margin-top: 20px;
+        }
+        .save-btn:hover {
+            background: rgba(183, 228, 199, 0.4);
+            border-color: rgba(183, 228, 199, 1);
+        }
+
+        /* 星座描述卡片 */
+        .constellation-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            z-index: 10001;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .constellation-card h3 {
+            color: white;
+            font-family: "Georgia", serif;
+            margin: 0 0 15px 0;
+            font-size: 24px;
+        }
+        .constellation-card p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+            margin: 0 0 20px 0;
+        }
+        .constellation-card .close-card {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 180, 162, 0.3);
+            border: 2px solid rgba(255, 180, 162, 0.5);
+            color: #FFB4A2;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: "Georgia", serif;
+        }
+        .constellation-card.swipe-out {
+            animation: swipeOut 0.5s ease-out forwards;
+        }
+        @keyframes swipeOut {
+            to {
+                transform: translate(-50%, -150%);
+                opacity: 0;
+            }
+        }
+
+        /* 统计记录模态框 */
+        #stats-modal {
+            display: none;
+        }
+        .stats-content {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        .stat-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .stat-item h4 {
+            color: white;
+            font-family: "Georgia", serif;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .stat-item .count {
+            font-size: 24px;
+            color: #74b9ff;
+            font-weight: bold;
+        }
+
     </style>
 </head>
 <body>
@@ -252,6 +490,8 @@
 
     <!-- 视图切换按钮：在 UI 层之外 -->
     <button id="view-toggle">✨ 查看星空</button>
+    <button id="customize-btn">🎨 自定义魔方</button>
+    <button id="stats-btn">📊 完成记录</button>
 
     <!-- 所有的计时器 UI 包裹在这里 -->
     <div id="ui-layer">
@@ -272,6 +512,37 @@
         <div class="controls">
             <button class="btn" id="reset-btn" style="color:#ff4757; border-color:#ff4757">重置</button>
             <button class="btn" id="main-btn" style="color:#2ed573; border-color:#2ed573">开始</button>
+            <button class="btn" id="random-btn" style="color:#a29bfe; border-color:#a29bfe">🎲 随机旋转</button>
+        </div>
+    </div>
+
+    <!-- 自定义魔方模态框 -->
+    <div id="customize-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>自定义魔方六个面</h2>
+                <button class="close-btn" id="close-modal">×</button>
+            </div>
+            <div id="face-configs"></div>
+            <button class="save-btn" id="save-config">保存配置</button>
+        </div>
+    </div>
+
+    <!-- 星座描述卡片 -->
+    <div id="constellation-card" class="constellation-card" style="display: none;">
+        <h3 id="constellation-name"></h3>
+        <p id="constellation-desc"></p>
+        <button class="close-card" id="close-constellation">关闭</button>
+    </div>
+
+    <!-- 统计记录模态框 -->
+    <div id="stats-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>完成记录</h2>
+                <button class="close-btn" id="close-stats-modal">×</button>
+            </div>
+            <div class="stats-content" id="stats-content"></div>
         </div>
     </div>
 
@@ -295,28 +566,104 @@
     let activeTimer = null; 
     let isRunning = false;  
     let isSkyMode = false;
+    
+    // 六个面的配置：type: 'countdown'(倒计时), 'countup'(正计时), 'pomodoro'(番茄钟)
+    // 默认配置
+    let faceConfigs = JSON.parse(localStorage.getItem('face_configs')) || {
+        front: { type: 'countdown', value: 40, unit: 'minute' },
+        back: { type: 'countdown', value: 60, unit: 'minute' },
+        right: { type: 'countdown', value: 25, unit: 'minute' },
+        left: { type: 'countdown', value: 10, unit: 'minute' },
+        top: { type: 'countdown', value: 30, unit: 'minute' },
+        bottom: { type: 'countdown', value: 90, unit: 'minute' }
+    };
+    
+    // 兼容旧配置格式（如果有的话）
+    function migrateOldConfig(config) {
+        if (config.minutes !== undefined || config.seconds !== undefined) {
+            // 旧格式：有minutes和seconds
+            const totalSeconds = (config.minutes || 0) * 60 + (config.seconds || 0);
+            if (totalSeconds >= 3600) {
+                return { type: config.type || 'countdown', value: Math.floor(totalSeconds / 3600), unit: 'hour' };
+            } else if (totalSeconds >= 60) {
+                return { type: config.type || 'countdown', value: Math.floor(totalSeconds / 60), unit: 'minute' };
+            } else {
+                return { type: config.type || 'countdown', value: totalSeconds, unit: 'second' };
+            }
+        }
+        return config;
+    }
+    
+    // 迁移所有配置
+    Object.keys(faceConfigs).forEach(key => {
+        faceConfigs[key] = migrateOldConfig(faceConfigs[key]);
+    });
+    
+    // 当前面的标识
+    let currentFaceId = 'front';
+    
+    // 每个面的完成次数统计
+    let faceStats = JSON.parse(localStorage.getItem('face_stats')) || {
+        front: 0,
+        back: 0,
+        right: 0,
+        left: 0,
+        top: 0,
+        bottom: 0
+    };
+    
+    // 每个面的配置哈希，用于检测配置是否改变
+    let faceConfigHashes = JSON.parse(localStorage.getItem('face_config_hashes')) || {};
+    
+    // 计算配置哈希
+    function getConfigHash(faceId) {
+        const config = faceConfigs[faceId];
+        return JSON.stringify(config);
+    }
+    
+    // 检查配置是否改变，如果改变则重置统计
+    function checkAndResetStats() {
+        Object.keys(faceConfigs).forEach(faceId => {
+            const currentHash = getConfigHash(faceId);
+            const savedHash = faceConfigHashes[faceId];
+            
+            if (savedHash && savedHash !== currentHash) {
+                // 配置改变了，重置统计
+                faceStats[faceId] = 0;
+            }
+            
+            // 更新哈希
+            faceConfigHashes[faceId] = currentHash;
+        });
+        
+        localStorage.setItem('face_stats', JSON.stringify(faceStats));
+        localStorage.setItem('face_config_hashes', JSON.stringify(faceConfigHashes));
+    }
+    
+    // 初始化时检查
+    checkAndResetStats();
 
     // ==========================================
     // 2. 星座数据
     // ==========================================
     const CONSTELLATIONS = [
         // 1. 北天核心区
-        { name: "小熊座(含北极星)", stars: [{x:0.5,y:0.12}, {x:0.48,y:0.15}, {x:0.47,y:0.18}, {x:0.5,y:0.2}, {x:0.53,y:0.19}, {x:0.54,y:0.16}], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,3]] },
-        { name: "北斗七星(大熊座)", stars: [{x:0.75,y:0.25}, {x:0.73,y:0.32}, {x:0.65,y:0.35}, {x:0.62,y:0.28}, {x:0.52,y:0.28}, {x:0.45,y:0.32}, {x:0.38,y:0.35}], links: [[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]] },
-        { name: "仙后座(W星)", stars: [{x:0.25,y:0.2}, {x:0.22,y:0.25}, {x:0.28,y:0.28}, {x:0.33,y:0.24}, {x:0.36,y:0.28}], links: [[0,1],[1,2],[2,3],[3,4]] },
+        { name: "小熊座(含北极星)", stars: [{x:0.5,y:0.12}, {x:0.48,y:0.15}, {x:0.47,y:0.18}, {x:0.5,y:0.2}, {x:0.53,y:0.19}, {x:0.54,y:0.16}], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,3]], desc: "小熊座是北天最著名的星座之一，包含北极星。在古代，航海者依靠北极星来导航，它几乎永远指向北方，是夜空中最可靠的指南针。" },
+        { name: "北斗七星(大熊座)", stars: [{x:0.75,y:0.25}, {x:0.73,y:0.32}, {x:0.65,y:0.35}, {x:0.62,y:0.28}, {x:0.52,y:0.28}, {x:0.45,y:0.32}, {x:0.38,y:0.35}], links: [[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]], desc: "北斗七星是大熊座中最亮的七颗星，排列成勺状。在中国古代，它被称为'北斗'，是重要的导航标志。古人云：'斗转星移'，正是描述它的运动。" },
+        { name: "仙后座(W星)", stars: [{x:0.25,y:0.2}, {x:0.22,y:0.25}, {x:0.28,y:0.28}, {x:0.33,y:0.24}, {x:0.36,y:0.28}], links: [[0,1],[1,2],[2,3],[3,4]], desc: "仙后座因其五颗主要恒星排列成'W'或'M'形状而闻名。在希腊神话中，它代表埃塞俄比亚王后卡西俄佩亚，她因夸耀自己的美貌而受到惩罚。" },
 
         // 2. 夏季大三角区 (位于天顶附近)
-        { name: "天琴座(织女星)", stars: [{x:0.45,y:0.45}, {x:0.47,y:0.48}, {x:0.46,y:0.52}, {x:0.43,y:0.51}, {x:0.42,y:0.47}], links: [[0,1],[1,2],[2,3],[3,4],[4,1]] },
-        { name: "天鹅座(十字架)", stars: [{x:0.55,y:0.42}, {x:0.55,y:0.5}, {x:0.55,y:0.6}, {x:0.55,y:0.68}, {x:0.48,y:0.5}, {x:0.62,y:0.5}], links: [[0,1],[1,2],[2,3],[1,4],[1,5]] },
-        { name: "天鹰座(牛郎星)", stars: [{x:0.65,y:0.55}, {x:0.68,y:0.58}, {x:0.66,y:0.65}, {x:0.6,y:0.62}, {x:0.58,y:0.58}, {x:0.62,y:0.6}], links: [[0,5],[5,1],[5,2],[5,3],[5,4]] },
+        { name: "天琴座(织女星)", stars: [{x:0.45,y:0.45}, {x:0.47,y:0.48}, {x:0.46,y:0.52}, {x:0.43,y:0.51}, {x:0.42,y:0.47}], links: [[0,1],[1,2],[2,3],[3,4],[4,1]], desc: "天琴座包含明亮的织女星，是夏季大三角的顶点之一。在中国传说中，织女是天上织布的仙女，与牛郎星隔银河相望，每年七夕才能相会。" },
+        { name: "天鹅座(十字架)", stars: [{x:0.55,y:0.42}, {x:0.55,y:0.5}, {x:0.55,y:0.6}, {x:0.55,y:0.68}, {x:0.48,y:0.5}, {x:0.62,y:0.5}], links: [[0,1],[1,2],[2,3],[1,4],[1,5]], desc: "天鹅座因其十字形状而被称为'北十字'。在希腊神话中，它代表宙斯变成的天鹅。这个星座横跨银河，是夏季夜空中最美丽的景象之一。" },
+        { name: "天鹰座(牛郎星)", stars: [{x:0.65,y:0.55}, {x:0.68,y:0.58}, {x:0.66,y:0.65}, {x:0.6,y:0.62}, {x:0.58,y:0.58}, {x:0.62,y:0.6}], links: [[0,5],[5,1],[5,2],[5,3],[5,4]], desc: "天鹰座包含明亮的牛郎星（河鼓二），与织女星隔银河相望。在中国民间传说中，牛郎和织女的爱情故事感动了无数人，成为七夕节的由来。" },
 
         // 3. 黄道与南方区
-        { name: "天蝎座(大钩子)", stars: [{x:0.4,y:0.85}, {x:0.43,y:0.88}, {x:0.48,y:0.9}, {x:0.52,y:0.88}, {x:0.54,y:0.82}, {x:0.52,y:0.75}, {x:0.48,y:0.72}, {x:0.45,y:0.75}], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]] },
-        { name: "人马座(茶壶)", stars: [{x:0.65,y:0.8}, {x:0.72,y:0.82}, {x:0.75,y:0.88}, {x:0.68,y:0.9}, {x:0.65,y:0.85}, {x:0.72,y:0.85}], links: [[0,1],[1,2],[2,3],[3,4],[4,0],[1,5]] },
+        { name: "天蝎座(大钩子)", stars: [{x:0.4,y:0.85}, {x:0.43,y:0.88}, {x:0.48,y:0.9}, {x:0.52,y:0.88}, {x:0.54,y:0.82}, {x:0.52,y:0.75}, {x:0.48,y:0.72}, {x:0.45,y:0.75}], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]], desc: "天蝎座因其明显的钩状形状而易于识别。在希腊神话中，它代表杀死猎户座的蝎子。这个星座包含许多明亮的恒星，是黄道十二宫之一。" },
+        { name: "人马座(茶壶)", stars: [{x:0.65,y:0.8}, {x:0.72,y:0.82}, {x:0.75,y:0.88}, {x:0.68,y:0.9}, {x:0.65,y:0.85}, {x:0.72,y:0.85}], links: [[0,1],[1,2],[2,3],[3,4],[4,0],[1,5]], desc: "人马座因其形状像茶壶而被称为'茶壶座'。它位于银河系中心方向，包含许多星云和星团。在希腊神话中，它代表半人马射手。" },
 
         // 4. 东西侧翼
-        { name: "狮子座", stars: [{x:0.15,y:0.5}, {x:0.18,y:0.55}, {x:0.15,y:0.62}, {x:0.08,y:0.6}, {x:0.05,y:0.55}, {x:0.06,y:0.48}], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]] },
-        { name: "飞马座", stars: [{x:0.85,y:0.5}, {x:0.92,y:0.5}, {x:0.92,y:0.6}, {x:0.85,y:0.6}], links: [[0,1],[1,2],[2,3],[3,0]] }
+        { name: "狮子座", stars: [{x:0.15,y:0.5}, {x:0.18,y:0.55}, {x:0.15,y:0.62}, {x:0.08,y:0.6}, {x:0.05,y:0.55}, {x:0.06,y:0.48}], links: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]], desc: "狮子座是黄道十二宫之一，其最亮的恒星组成'镰刀'形状，代表狮子的头部和鬃毛。在古代，它被视为力量和勇气的象征。" },
+        { name: "飞马座", stars: [{x:0.85,y:0.5}, {x:0.92,y:0.5}, {x:0.92,y:0.6}, {x:0.85,y:0.6}], links: [[0,1],[1,2],[2,3],[3,0]], desc: "飞马座因其四颗主要恒星组成的大四边形而闻名，被称为'飞马座四边形'。在希腊神话中，它代表有翅膀的神马珀伽索斯，是诗人和艺术家的灵感之源。" }
     ];
 
     // ==========================================
@@ -389,11 +736,51 @@
     // ==========================================
     // 4. 计时逻辑
     // ==========================================
-    let currentFaceTime = 40;
-    const states = {
-        40: { left: 40 * 60 }, 60: { left: 60 * 60 }, 25: { left: 25 * 60 },
-        10:  { left: 10 * 60 }, 30: { left: 30 * 60 }, 90: { left: 90 * 60 }
-    };
+    // 存储每个面的状态
+    const states = {};
+    
+    // 将配置转换为秒数
+    function configToSeconds(config) {
+        if (config.type === 'pomodoro') {
+            return 25 * 60; // 番茄钟固定25分钟
+        }
+        let seconds = 0;
+        if (config.unit === 'hour') {
+            seconds = config.value * 3600;
+        } else if (config.unit === 'minute') {
+            seconds = config.value * 60;
+        } else if (config.unit === 'second') {
+            seconds = config.value;
+        }
+        return seconds;
+    }
+    
+    // 初始化状态
+    function initStates() {
+        const faceNames = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+        faceNames.forEach(faceId => {
+            const config = faceConfigs[faceId];
+            const totalSeconds = configToSeconds(config);
+            if (!states[faceId]) {
+                states[faceId] = { 
+                    elapsed: 0, 
+                    total: totalSeconds,
+                    type: config.type,
+                    pomodoroWorkTime: config.type === 'pomodoro' ? 25 * 60 : 0,
+                    pomodoroBreakTime: config.type === 'pomodoro' ? 5 * 60 : 0,
+                    isBreak: false
+                };
+            } else {
+                states[faceId].total = totalSeconds;
+                states[faceId].type = config.type;
+                if (config.type === 'pomodoro') {
+                    states[faceId].pomodoroWorkTime = 25 * 60;
+                    states[faceId].pomodoroBreakTime = 5 * 60;
+                }
+            }
+        });
+    }
+    initStates();
 
     function stopGlobalTimer() {
         if (activeTimer) { clearInterval(activeTimer); activeTimer = null; }
@@ -401,17 +788,44 @@
     }
 
     function refreshUI() {
-        const state = states[currentFaceTime];
-        const m = Math.floor(state.left / 60), s = state.left % 60;
+        const state = states[currentFaceId];
+        if (!state) return;
+        
+        let displaySeconds = 0;
+        if (state.type === 'countdown') {
+            displaySeconds = state.total - state.elapsed;
+        } else if (state.type === 'countup') {
+            displaySeconds = state.elapsed;
+        } else if (state.type === 'pomodoro') {
+            if (state.isBreak) {
+                displaySeconds = Math.max(0, state.pomodoroBreakTime - (state.elapsed % (state.pomodoroWorkTime + state.pomodoroBreakTime)));
+            } else {
+                const cycleTime = state.elapsed % (state.pomodoroWorkTime + state.pomodoroBreakTime);
+                displaySeconds = Math.max(0, state.pomodoroWorkTime - cycleTime);
+            }
+        }
+        
+        const m = Math.floor(displaySeconds / 60);
+        const s = Math.floor(displaySeconds % 60);
         timerDisplay.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         
-        if (isRunning) {
-            mainBtn.innerText = "暂停"; mainBtn.style.color = "#ffa502"; mainBtn.style.borderColor = "#ffa502";
+        // 更新大数字显示
+        const config = faceConfigs[currentFaceId];
+        if (state.type === 'pomodoro') {
+            bigNum.innerText = state.isBreak ? '休息' : '工作';
+            document.getElementById('unit').innerText = state.isBreak ? 'BREAK' : 'WORK';
         } else {
-            // const total = currentFaceTime === 2 ? 2 : currentFaceTime * 60;
-            const total = currentFaceTime === currentFaceTime * 60;
-
-            const isInitial = state.left === total;
+            bigNum.innerText = config.value;
+            const unitText = config.unit === 'hour' ? 'HOURS' : config.unit === 'minute' ? 'MINUTES' : 'SECONDS';
+            document.getElementById('unit').innerText = unitText;
+        }
+        
+        if (isRunning) {
+            mainBtn.innerText = "暂停";
+            mainBtn.style.color = "#ffa502";
+            mainBtn.style.borderColor = "#ffa502";
+        } else {
+            const isInitial = state.elapsed === 0;
             mainBtn.innerText = isInitial ? "开始" : "继续";
             mainBtn.style.color = isInitial ? "#2ed573" : "#ffa502";
             mainBtn.style.borderColor = isInitial ? "#2ed573" : "#ffa502";
@@ -422,50 +836,172 @@
         stopGlobalTimer();
         let nx = ((Math.round(rx / 90) % 4) + 4) % 4;
         let ny = ((Math.round(ry / 90) % 4) + 4) % 4;
-        let time = 40;
-        if (nx === 0) time = [40, 10, 60, 25][ny];
-        else if (nx === 1) time = 90; 
-        else if (nx === 2) time = [60, 25, 40, 60][ny];
-        else if (nx === 3) time = 30; 
-        currentFaceTime = time;
-        // bigNum.innerText = time === 2 ? "TEST" : time;
-        bigNum.innerText = time 
+        
+        // 根据旋转角度确定当前面
+        let faceId = 'front';
+        if (nx === 0) {
+            const faces = ['front', 'left', 'back', 'right'];
+            faceId = faces[ny];
+        } else if (nx === 1) {
+            faceId = 'bottom';
+        } else if (nx === 2) {
+            const faces = ['back', 'right', 'front', 'left'];
+            faceId = faces[ny];
+        } else if (nx === 3) {
+            faceId = 'top';
+        }
+        
+        currentFaceId = faceId;
         overlay.style.opacity = "1";
+        
+        // 更新标签显示
+        updateFaceLabels();
         refreshUI();
+    }
+    
+    function updateFaceLabels() {
+        const faceElements = {
+            front: document.querySelector('.f-front .label-ring'),
+            back: document.querySelector('.f-back .label-ring'),
+            right: document.querySelector('.f-right .label-ring'),
+            left: document.querySelector('.f-left .label-ring'),
+            top: document.querySelector('.f-top .label-ring'),
+            bottom: document.querySelector('.f-bottom .label-ring')
+        };
+        
+        Object.keys(faceElements).forEach(faceId => {
+            const config = faceConfigs[faceId];
+            const label = faceElements[faceId];
+            if (!label) return;
+            
+            let text = '';
+            if (config.type === 'pomodoro') {
+                text = '番茄钟';
+            } else if (config.type === 'countup') {
+                text = '正计时';
+            } else {
+                const unitText = config.unit === 'hour' ? '时' : config.unit === 'minute' ? '分' : '秒';
+                text = `${config.value} ${unitText}`;
+            }
+            
+            label.querySelectorAll('span').forEach(span => {
+                span.innerText = text;
+            });
+        });
     }
 
     // ==========================================
     // 5. 事件监听
     // ==========================================
+    let lastElapsedOnStop = {}; // 记录停止时的已用时间
+    
     mainBtn.addEventListener('click', () => {
         if (isRunning) {
+            // 停止计时
+            const state = states[currentFaceId];
+            if (state && state.type === 'countup' && state.elapsed > 0) {
+                // 正计时：停止时如果已经计时了，就算完成
+                const hasElapsed = state.elapsed > 0;
+                if (hasElapsed && (!lastElapsedOnStop[currentFaceId] || state.elapsed > lastElapsedOnStop[currentFaceId])) {
+                    // 增加完成次数
+                    faceStats[currentFaceId] = (faceStats[currentFaceId] || 0) + 1;
+                    localStorage.setItem('face_stats', JSON.stringify(faceStats));
+                    
+                    // 点亮星星
+                    unlockedCount++;
+                    localStorage.setItem('stars_unlocked', unlockedCount);
+                    drawSky();
+                    checkConstellationComplete();
+                    lastElapsedOnStop[currentFaceId] = state.elapsed;
+                }
+            }
             stopGlobalTimer();
         } else {
             isRunning = true;
-            const state = states[currentFaceTime];
+            const state = states[currentFaceId];
+            if (!state) return;
+            
             activeTimer = setInterval(() => {
-                if (state.left > 0) {
-                    state.left--; refreshUI();
-                } else {
+                state.elapsed++;
+                
+                let isFinished = false;
+                if (state.type === 'countdown') {
+                    isFinished = state.elapsed >= state.total;
+                } else if (state.type === 'pomodoro') {
+                    const cycleTime = state.elapsed % (state.pomodoroWorkTime + state.pomodoroBreakTime);
+                    const wasBreak = state.isBreak;
+                    state.isBreak = cycleTime >= state.pomodoroWorkTime;
+                    
+                    // 完成一个工作周期
+                    if (!wasBreak && state.isBreak && cycleTime === state.pomodoroWorkTime) {
+                        isFinished = true;
+                    }
+                    // 完成一个休息周期，开始新的工作周期
+                    else if (wasBreak && !state.isBreak && cycleTime === 0) {
+                        isFinished = true;
+                    }
+                }
+                
+                refreshUI();
+                
+                if (isFinished) {
                     stopGlobalTimer();
-                    // state.left = currentFaceTime === 2 ? 2 : currentFaceTime * 60;
-                    state.left = currentFaceTime === currentFaceTime * 60;
-
+                    state.elapsed = 0;
+                    state.isBreak = false;
+                    
+                    // 增加完成次数
+                    faceStats[currentFaceId] = (faceStats[currentFaceId] || 0) + 1;
+                    localStorage.setItem('face_stats', JSON.stringify(faceStats));
+                    
+                    // 点亮星星
                     unlockedCount++;
                     localStorage.setItem('stars_unlocked', unlockedCount);
-                    drawSky(); refreshUI();
-                    alert("计时结束，点亮了一颗星！");
+                    drawSky();
+                    
+                    // 检查是否完成完整星座
+                    checkConstellationComplete();
+                    
+                    refreshUI();
                 }
             }, 1000);
         }
         refreshUI();
     });
+    
+    function checkConstellationComplete() {
+        let globalStarIdx = 0;
+        CONSTELLATIONS.forEach(constellation => {
+            const constellationStarCount = constellation.stars.length;
+            const allStarsUnlocked = unlockedCount > globalStarIdx + constellationStarCount - 1;
+            const wasJustCompleted = unlockedCount === globalStarIdx + constellationStarCount;
+            
+            if (wasJustCompleted && allStarsUnlocked) {
+                // 显示星座描述
+                showConstellationCard(constellation);
+            }
+            
+            globalStarIdx += constellationStarCount;
+        });
+    }
+    
+    function showConstellationCard(constellation) {
+        const card = document.getElementById('constellation-card');
+        document.getElementById('constellation-name').innerText = constellation.name;
+        document.getElementById('constellation-desc').innerText = constellation.desc;
+        card.style.display = 'block';
+    }
 
     document.getElementById('reset-btn').addEventListener('click', () => {
         stopGlobalTimer();
-        // states[currentFaceTime].left = currentFaceTime === 2 ? 2 : currentFaceTime * 60;
-        states[currentFaceTime].left = currentFaceTime === currentFaceTime * 60;
-
+        const state = states[currentFaceId];
+        if (state) {
+            state.elapsed = 0;
+            state.isBreak = false;
+            // 重置正计时的完成状态
+            if (lastElapsedOnStop[currentFaceId]) {
+                delete lastElapsedOnStop[currentFaceId];
+            }
+        }
         refreshUI();
     });
 
@@ -474,9 +1010,171 @@
         uiLayer.classList.toggle('hidden', isSkyMode);
         viewBtn.innerText = isSkyMode ? "🕒 返回计时" : "✨ 查看星空";
     });
+    
+    // 自定义魔方按钮
+    const customizeBtn = document.getElementById('customize-btn');
+    const customizeModal = document.getElementById('customize-modal');
+    const closeModal = document.getElementById('close-modal');
+    const saveConfig = document.getElementById('save-config');
+    const faceConfigsDiv = document.getElementById('face-configs');
+    
+    function renderFaceConfigs() {
+        const faceNames = {
+            front: '前面',
+            back: '后面',
+            right: '右面',
+            left: '左面',
+            top: '上面',
+            bottom: '下面'
+        };
+        
+        faceConfigsDiv.innerHTML = '';
+        Object.keys(faceNames).forEach(faceId => {
+            const config = faceConfigs[faceId];
+            const div = document.createElement('div');
+            div.className = 'face-config';
+            div.innerHTML = `
+                <h3>${faceNames[faceId]}</h3>
+                <label>计时类型：</label>
+                <select id="type-${faceId}">
+                    <option value="countdown" ${config.type === 'countdown' ? 'selected' : ''}>倒计时</option>
+                    <option value="countup" ${config.type === 'countup' ? 'selected' : ''}>正计时</option>
+                    <option value="pomodoro" ${config.type === 'pomodoro' ? 'selected' : ''}>番茄钟</option>
+                </select>
+                ${config.type !== 'pomodoro' ? `
+                    <label>时间设置：</label>
+                    <div class="time-input-group">
+                        <input type="number" id="value-${faceId}" min="0" max="999" value="${config.value || 0}" placeholder="数值">
+                        <select id="unit-${faceId}" class="time-unit">
+                            <option value="hour" ${config.unit === 'hour' ? 'selected' : ''}>时</option>
+                            <option value="minute" ${config.unit === 'minute' ? 'selected' : ''}>分</option>
+                            <option value="second" ${config.unit === 'second' ? 'selected' : ''}>秒</option>
+                        </select>
+                    </div>
+                ` : `
+                    <p style="color: rgba(255,255,255,0.6); font-size: 12px;">番茄钟：工作25分钟，休息5分钟</p>
+                `}
+            `;
+            faceConfigsDiv.appendChild(div);
+            
+            // 监听类型变化
+            document.getElementById(`type-${faceId}`).addEventListener('change', (e) => {
+                const type = e.target.value;
+                const configDiv = e.target.closest('.face-config');
+                const timeGroup = configDiv.querySelector('.time-input-group');
+                const pomodoroNote = configDiv.querySelector('p');
+                const timeLabel = Array.from(configDiv.querySelectorAll('label')).find(l => l.textContent === '时间设置：');
+                
+                if (type === 'pomodoro') {
+                    if (timeGroup) timeGroup.style.display = 'none';
+                    if (timeLabel) timeLabel.style.display = 'none';
+                    if (!pomodoroNote) {
+                        const p = document.createElement('p');
+                        p.style.cssText = 'color: rgba(255,255,255,0.6); font-size: 12px;';
+                        p.textContent = '番茄钟：工作25分钟，休息5分钟';
+                        configDiv.appendChild(p);
+                    }
+                } else {
+                    if (timeGroup) timeGroup.style.display = 'flex';
+                    if (timeLabel) timeLabel.style.display = 'block';
+                    if (pomodoroNote) pomodoroNote.remove();
+                }
+            });
+        });
+    }
+    
+    customizeBtn.addEventListener('click', () => {
+        renderFaceConfigs();
+        customizeModal.style.display = 'block';
+    });
+    
+    closeModal.addEventListener('click', () => {
+        customizeModal.style.display = 'none';
+    });
+    
+    customizeModal.addEventListener('click', (e) => {
+        if (e.target === customizeModal) {
+            customizeModal.style.display = 'none';
+        }
+    });
+    
+    saveConfig.addEventListener('click', () => {
+        Object.keys(faceConfigs).forEach(faceId => {
+            const type = document.getElementById(`type-${faceId}`).value;
+            if (type === 'pomodoro') {
+                faceConfigs[faceId] = { type: 'pomodoro', value: 25, unit: 'minute' };
+            } else {
+                const value = parseInt(document.getElementById(`value-${faceId}`).value) || 0;
+                const unit = document.getElementById(`unit-${faceId}`).value;
+                faceConfigs[faceId] = { type, value, unit };
+            }
+        });
+        
+        localStorage.setItem('face_configs', JSON.stringify(faceConfigs));
+        
+        // 检查配置是否改变，如果改变则重置对应面的统计
+        checkAndResetStats();
+        
+        initStates();
+        updateFaceLabels();
+        refreshUI();
+        customizeModal.style.display = 'none';
+    });
+    
+    // 随机旋转按钮
+    document.getElementById('random-btn').addEventListener('click', () => {
+        // 生成随机旋转角度（90度的倍数）
+        rx = Math.floor(Math.random() * 4) * 90;
+        ry = Math.floor(Math.random() * 4) * 90;
+        
+        cube.style.transition = 'transform 1s cubic-bezier(0.23, 1, 0.32, 1)';
+        cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+        
+        setTimeout(() => {
+            updateFaceLogic();
+        }, 1000);
+    });
+    
+    // 关闭星座卡片
+    document.getElementById('close-constellation').addEventListener('click', () => {
+        const card = document.getElementById('constellation-card');
+        card.classList.add('swipe-out');
+        setTimeout(() => {
+            card.style.display = 'none';
+            card.classList.remove('swipe-out');
+        }, 500);
+    });
+    
+    // 支持滑动关闭星座卡片
+    let cardStartY = 0;
+    let cardIsDragging = false;
+    const constellationCard = document.getElementById('constellation-card');
+    
+    constellationCard.addEventListener('touchstart', (e) => {
+        cardStartY = e.touches[0].clientY;
+        cardIsDragging = true;
+    });
+    
+    constellationCard.addEventListener('touchmove', (e) => {
+        if (!cardIsDragging) return;
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - cardStartY;
+        if (diff > 50) {
+            constellationCard.classList.add('swipe-out');
+            setTimeout(() => {
+                constellationCard.style.display = 'none';
+                constellationCard.classList.remove('swipe-out');
+            }, 500);
+            cardIsDragging = false;
+        }
+    });
+    
+    constellationCard.addEventListener('touchend', () => {
+        cardIsDragging = false;
+    });
 
     document.addEventListener('pointerdown', e => {
-        if (isSkyMode || e.target.closest('.controls') || e.target.id === 'view-toggle') return;
+        if (isSkyMode || e.target.closest('.controls') || e.target.id === 'view-toggle' || e.target.id === 'customize-btn' || e.target.id === 'stats-btn' || e.target.closest('.modal')) return;
         isDragging = true; startX = e.pageX; startY = e.pageY;
         cube.style.transition = 'none'; overlay.style.opacity = "0.2";
     });
@@ -500,6 +1198,7 @@
     
     // 初始化
     resize();
+    updateFaceLabels();
     updateFaceLogic();
 </script>
 </body>

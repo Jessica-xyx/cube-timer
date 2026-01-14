@@ -617,11 +617,6 @@
     <!-- 背景永远存在 -->
     <canvas id="starfield"></canvas>
 
-    <!-- 视图切换按钮：在 UI 层之外 -->
-    <!-- <button id="view-toggle">✨ 查看星空</button>
-    <button id="customize-btn">🎨 自定义魔方</button>
-    <button id="stats-btn">📊 完成记录</button> -->
-
     <!-- 菜单开关按钮 -->
     <button id="menu-toggle" class="menu-toggle">
         <span></span><span></span><span></span>
@@ -720,6 +715,15 @@
     let activeTimer = null; 
     let isRunning = false;  
     let isSkyMode = false;
+
+    const FACE_NAMES = {
+        front: '破晓',
+        back: '织梦',
+        right: '湖光',
+        left: '落霞',
+        top: '密林',
+        bottom: '深空'
+    };
     
     // 六个面的配置：type: 'countdown'(倒计时), 'countup'(正计时), 'pomodoro'(番茄钟)
     // 默认配置
@@ -1028,6 +1032,9 @@
             const label = faceElements[faceId];
             if (!label) return;
             
+            // --- 修改这里：让标题显示“破晓”、“织梦”等 ---
+            let poeticName = FACE_NAMES[faceId];
+
             let text = '';
             if (config.type === 'pomodoro') {
                 text = '番茄钟';
@@ -1037,7 +1044,9 @@
                 const unitText = config.unit === 'hour' ? '时' : config.unit === 'minute' ? '分' : '秒';
                 text = `${config.value} ${unitText}`;
             }
-            
+
+            let finalLabel = `${poeticName} · ${text}`; // 例如：破晓 · 40分
+
             label.querySelectorAll('span').forEach(span => {
                 span.innerText = text;
             });
@@ -1193,14 +1202,7 @@
     // 渲染统计记录
     function renderStats() {
         const statsContent = document.getElementById('stats-content');
-        const faceNames = {
-            front: '前面',
-            back: '后面',
-            right: '右面',
-            left: '左面',
-            top: '上面',
-            bottom: '下面'
-        };
+        const faceNames = FACE_NAMES;
         
         statsContent.innerHTML = '';
         Object.keys(faceNames).forEach(faceId => {
@@ -1309,14 +1311,7 @@
     const faceConfigsDiv = document.getElementById('face-configs');
     
     function renderFaceConfigs() {
-        const faceNames = {
-            front: '前面',
-            back: '后面',
-            right: '右面',
-            left: '左面',
-            top: '上面',
-            bottom: '下面'
-        };
+        const faceNames = FACE_NAMES;
         
         faceConfigsDiv.innerHTML = '';
         Object.keys(faceNames).forEach(faceId => {
@@ -1463,9 +1458,8 @@
         cardIsDragging = false;
     });
 
+
     document.addEventListener('pointerdown', e => {
-        // if (isSkyMode || e.target.closest('.controls') || e.target.id === 'view-toggle' || e.target.id === 'customize-btn' || e.target.id === 'stats-btn' || e.target.closest('.modal')) return;
-        document.addEventListener('pointerdown', e => {
         // 如果点击的是 控件、按钮、模态框 或 导航栏，则不触发魔方旋转
         if (isSkyMode || e.target.closest('.controls') || 
             e.target.closest('.side-nav') || e.target.closest('.menu-toggle') || 
@@ -1474,9 +1468,7 @@
         isDragging = true; startX = e.pageX; startY = e.pageY;
         cube.style.transition = 'none'; overlay.style.opacity = "0.2";
     });
-        isDragging = true; startX = e.pageX; startY = e.pageY;
-        cube.style.transition = 'none'; overlay.style.opacity = "0.2";
-    });
+
 
     document.addEventListener('pointermove', e => {
         if (!isDragging) return;

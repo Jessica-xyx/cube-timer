@@ -71,7 +71,7 @@
         }
 
         /* --- 视图切换按钮 --- */
-        #view-toggle, #customize-btn, #stats-btn {
+        /* #view-toggle, #customize-btn, #stats-btn {
             position: fixed;
             right: 25px;
             z-index: 9999;
@@ -126,7 +126,41 @@
         #view-toggle:active, #customize-btn:active, #stats-btn:active { 
             transform: scale(0.9) translateY(2px); 
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        } */
+
+        /* --- 新导航栏样式 --- */
+        .menu-toggle {
+            position: fixed; top: 25px; right: 25px; z-index: 10001;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 5px;
         }
+        .menu-toggle span { display: block; width: 22px; height: 2px; background: white; transition: 0.3s; }
+        /* 变成叉叉的动画 */
+        .menu-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .menu-toggle.active span:nth-child(2) { opacity: 0; }
+        .menu-toggle.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .side-nav {
+            position: fixed; top: 0; right: -220px; width: 200px; height: 100vh;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(30px);
+            display: flex; flex-direction: column; align-items: center;
+            padding-top: 100px; gap: 25px; z-index: 10000;
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        .side-nav.active { right: 0; }
+
+        /* 侧边栏内的按钮统一样式 */
+        #view-toggle, #customize-btn, #stats-btn {
+            width: 160px; height: 50px; border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255,255,255,0.3);
+            color: white; font-family: "Georgia", serif; font-weight: bold;
+            cursor: pointer; backdrop-filter: blur(10px);
+        }
+
 
         /* 原有样式保持不变 */
         #timer-display { 
@@ -584,9 +618,22 @@
     <canvas id="starfield"></canvas>
 
     <!-- 视图切换按钮：在 UI 层之外 -->
-    <button id="view-toggle">✨ 查看星空</button>
+    <!-- <button id="view-toggle">✨ 查看星空</button>
     <button id="customize-btn">🎨 自定义魔方</button>
-    <button id="stats-btn">📊 完成记录</button>
+    <button id="stats-btn">📊 完成记录</button> -->
+
+    <!-- 菜单开关按钮 -->
+    <button id="menu-toggle" class="menu-toggle">
+        <span></span><span></span><span></span>
+    </button>
+
+    <!-- 右侧导航栏容器 -->
+    <div id="side-nav" class="side-nav">
+        <button id="view-toggle">✨ 查看星空</button>
+        <button id="customize-btn">🎨 自定义魔方</button>
+        <button id="stats-btn">📊 完成记录</button>
+    </div>
+
 
     <!-- 所有的计时器 UI 包裹在这里 -->
     <div id="ui-layer">
@@ -1417,7 +1464,16 @@
     });
 
     document.addEventListener('pointerdown', e => {
-        if (isSkyMode || e.target.closest('.controls') || e.target.id === 'view-toggle' || e.target.id === 'customize-btn' || e.target.id === 'stats-btn' || e.target.closest('.modal')) return;
+        // if (isSkyMode || e.target.closest('.controls') || e.target.id === 'view-toggle' || e.target.id === 'customize-btn' || e.target.id === 'stats-btn' || e.target.closest('.modal')) return;
+        document.addEventListener('pointerdown', e => {
+        // 如果点击的是 控件、按钮、模态框 或 导航栏，则不触发魔方旋转
+        if (isSkyMode || e.target.closest('.controls') || 
+            e.target.closest('.side-nav') || e.target.closest('.menu-toggle') || 
+            e.target.closest('.modal')) return;
+            
+        isDragging = true; startX = e.pageX; startY = e.pageY;
+        cube.style.transition = 'none'; overlay.style.opacity = "0.2";
+    });
         isDragging = true; startX = e.pageX; startY = e.pageY;
         cube.style.transition = 'none'; overlay.style.opacity = "0.2";
     });
@@ -1443,6 +1499,33 @@
     resize();
     updateFaceLabels();
     updateFaceLogic();
+
+    // --- 导航菜单逻辑 ---
+    const menuToggle = document.getElementById('menu-toggle');
+    const sideNav = document.getElementById('side-nav');
+
+    // 点击按钮切换菜单
+    menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('active');
+        sideNav.classList.toggle('active');
+    });
+
+    // 点击菜单里的任何按钮后，自动关闭菜单
+    [viewBtn, customizeBtn, statsBtn].forEach(btn => {
+        btn.addEventListener('click', () => {
+            menuToggle.classList.remove('active');
+            sideNav.classList.remove('active');
+        });
+    });
+
+    // 点击页面其他地方也能关闭菜单
+    document.addEventListener('pointerdown', (e) => {
+        if (!sideNav.contains(e.target) && !menuToggle.contains(e.target) && sideNav.classList.contains('active')) {
+            menuToggle.classList.remove('active');
+            sideNav.classList.remove('active');
+        }
+    });
+
 </script>
 </body>
 </html>

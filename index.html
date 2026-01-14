@@ -481,6 +481,101 @@
             font-weight: bold;
         }
 
+        /* 完成提示弹窗 */
+        .completion-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid rgba(116, 185, 255, 0.5);
+            border-radius: 20px;
+            padding: 30px 40px;
+            z-index: 10002;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: toastAppear 0.3s ease-out;
+        }
+        @keyframes toastAppear {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        .completion-toast p {
+            color: white;
+            font-family: "Georgia", serif;
+            font-size: 20px;
+            margin: 0;
+        }
+        .completion-toast.show {
+            display: block;
+        }
+        .completion-toast.hide {
+            animation: toastDisappear 0.3s ease-out forwards;
+        }
+        @keyframes toastDisappear {
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+        }
+
+        /* 星空模式下的星座列表 */
+        .constellation-list {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 40, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 70vh;
+            overflow-y: auto;
+            z-index: 10003;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .constellation-list h2 {
+            color: white;
+            font-family: "Georgia", serif;
+            margin: 0 0 20px 0;
+        }
+        .constellation-list-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .constellation-list-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .constellation-list-item h3 {
+            color: white;
+            font-family: "Georgia", serif;
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+        .constellation-list-item .status {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+        }
+        .constellation-list-item.completed .status {
+            color: #74b9ff;
+        }
+
     </style>
 </head>
 <body>
@@ -544,6 +639,18 @@
             </div>
             <div class="stats-content" id="stats-content"></div>
         </div>
+    </div>
+
+    <!-- 完成提示弹窗 -->
+    <div id="completion-toast" class="completion-toast" style="display: none;">
+        <p id="completion-message"></p>
+    </div>
+
+    <!-- 星空模式下的星座列表 -->
+    <div id="constellation-list" class="constellation-list" style="display: none;">
+        <h2>已点亮的星座</h2>
+        <div id="constellation-list-content"></div>
+        <button class="close-card" id="close-constellation-list" style="margin-top: 20px;">关闭</button>
     </div>
 
     <script>
@@ -911,6 +1018,10 @@
                     unlockedCount++;
                     localStorage.setItem('stars_unlocked', unlockedCount);
                     drawSky();
+                    
+                    // 显示完成提示
+                    showCompletionToast("✨ 你已经点亮了一颗星星！");
+                    
                     checkConstellationComplete();
                     lastElapsedOnStop[currentFaceId] = state.elapsed;
                 }
@@ -958,6 +1069,9 @@
                     localStorage.setItem('stars_unlocked', unlockedCount);
                     drawSky();
                     
+                    // 显示完成提示
+                    showCompletionToast("✨ 你已经点亮了一颗星星！");
+                    
                     // 检查是否完成完整星座
                     checkConstellationComplete();
                     
@@ -984,10 +1098,15 @@
         });
     }
     
-    function showConstellationCard(constellation) {
+    function showConstellationCard(constellation, isCompleted = true) {
         const card = document.getElementById('constellation-card');
         document.getElementById('constellation-name').innerText = constellation.name;
-        document.getElementById('constellation-desc').innerText = constellation.desc;
+        
+        let desc = constellation.desc;
+        if (!isCompleted) {
+            desc = `[尚未完成] ${desc}`;
+        }
+        document.getElementById('constellation-desc').innerText = desc;
         card.style.display = 'block';
     }
 
@@ -1005,10 +1124,134 @@
         refreshUI();
     });
 
+    // 显示完成提示
+    function showCompletionToast(message) {
+        const toast = document.getElementById('completion-toast');
+        const messageEl = document.getElementById('completion-message');
+        messageEl.innerText = message;
+        toast.style.display = 'block';
+        toast.classList.remove('hide');
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(() => {
+                toast.style.display = 'none';
+                toast.classList.remove('hide');
+            }, 300);
+        }, 2000);
+    }
+    
+    // 渲染统计记录
+    function renderStats() {
+        const statsContent = document.getElementById('stats-content');
+        const faceNames = {
+            front: '前面',
+            back: '后面',
+            right: '右面',
+            left: '左面',
+            top: '上面',
+            bottom: '下面'
+        };
+        
+        statsContent.innerHTML = '';
+        Object.keys(faceNames).forEach(faceId => {
+            const count = faceStats[faceId] || 0;
+            const config = faceConfigs[faceId];
+            let configText = '';
+            if (config.type === 'pomodoro') {
+                configText = '番茄钟';
+            } else if (config.type === 'countup') {
+                configText = '正计时';
+            } else {
+                const unitText = config.unit === 'hour' ? '时' : config.unit === 'minute' ? '分' : '秒';
+                configText = `倒计时 ${config.value}${unitText}`;
+            }
+            
+            const div = document.createElement('div');
+            div.className = 'stat-item';
+            div.innerHTML = `
+                <h4>${faceNames[faceId]}</h4>
+                <div style="color: rgba(255,255,255,0.6); font-size: 12px; margin-bottom: 5px;">${configText}</div>
+                <div class="count">${count} 次</div>
+            `;
+            statsContent.appendChild(div);
+        });
+    }
+    
+    // 统计按钮事件
+    const statsBtn = document.getElementById('stats-btn');
+    const statsModal = document.getElementById('stats-modal');
+    const closeStatsModal = document.getElementById('close-stats-modal');
+    
+    statsBtn.addEventListener('click', () => {
+        renderStats();
+        statsModal.style.display = 'block';
+    });
+    
+    closeStatsModal.addEventListener('click', () => {
+        statsModal.style.display = 'none';
+    });
+    
+    statsModal.addEventListener('click', (e) => {
+        if (e.target === statsModal) {
+            statsModal.style.display = 'none';
+        }
+    });
+    
     viewBtn.addEventListener('click', () => {
         isSkyMode = !isSkyMode;
         uiLayer.classList.toggle('hidden', isSkyMode);
         viewBtn.innerText = isSkyMode ? "🕒 返回计时" : "✨ 查看星空";
+        
+        // 在星空模式下，显示已点亮的星座列表
+        if (isSkyMode) {
+            showConstellationList();
+        } else {
+            document.getElementById('constellation-list').style.display = 'none';
+        }
+    });
+    
+    // 显示已点亮的星座列表
+    function showConstellationList() {
+        const listContent = document.getElementById('constellation-list-content');
+        const list = document.getElementById('constellation-list');
+        listContent.innerHTML = '';
+        
+        let globalStarIdx = 0;
+        CONSTELLATIONS.forEach(constellation => {
+            const constellationStarCount = constellation.stars.length;
+            const unlockedStars = Math.min(unlockedCount - globalStarIdx, constellationStarCount);
+            const isCompleted = unlockedCount > globalStarIdx + constellationStarCount - 1;
+            
+            if (unlockedStars > 0 || isCompleted) {
+                const item = document.createElement('div');
+                item.className = `constellation-list-item ${isCompleted ? 'completed' : ''}`;
+                item.innerHTML = `
+                    <h3>${constellation.name}</h3>
+                    <div class="status">${isCompleted ? '✓ 已完成' : `已点亮 ${unlockedStars}/${constellationStarCount} 颗星`}</div>
+                `;
+                item.addEventListener('click', () => {
+                    // 如果已完成，显示完整介绍；如果未完成，也显示介绍但提示未完成
+                    showConstellationCard(constellation, isCompleted);
+                });
+                listContent.appendChild(item);
+            }
+            
+            globalStarIdx += constellationStarCount;
+        });
+        
+        if (listContent.children.length === 0) {
+            listContent.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center;">还没有点亮任何星座</p>';
+        }
+        
+        list.style.display = 'block';
+    }
+    
+    // 关闭星座列表
+    document.getElementById('close-constellation-list').addEventListener('click', () => {
+        document.getElementById('constellation-list').style.display = 'none';
     });
     
     // 自定义魔方按钮

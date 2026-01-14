@@ -990,6 +990,25 @@
         }
     }
 
+    // 清理所有面板的函数
+    function closeAllPanels() {
+        // 1. 关闭自定义模态框
+        document.getElementById('customize-modal').style.display = 'none';
+        // 2. 关闭统计模态框
+        document.getElementById('stats-modal').style.display = 'none';
+        // 3. 关闭星座详情卡片
+        document.getElementById('constellation-card').style.display = 'none';
+        // 4. 关闭星空模式下的星座列表
+        document.getElementById('constellation-list').style.display = 'none';
+        
+        // 5. 如果当前是星空模式，退出它回到计时界面
+        if (isSkyMode) {
+            isSkyMode = false;
+            uiLayer.classList.remove('hidden');
+            viewBtn.innerText = "✨ 查看星空";
+        }
+    }
+
     function updateFaceLogic() {
         stopGlobalTimer();
         let nx = ((Math.round(rx / 90) % 4) + 4) % 4;
@@ -1234,9 +1253,15 @@
     const statsModal = document.getElementById('stats-modal');
     const closeStatsModal = document.getElementById('close-stats-modal');
     
+    // statsBtn.addEventListener('click', () => {
+    //     renderStats();
+    //     statsModal.style.display = 'block';
+    // });
+
     statsBtn.addEventListener('click', () => {
+        closeAllPanels(); // 先清理
         renderStats();
-        statsModal.style.display = 'block';
+        document.getElementById('stats-modal').style.display = 'block';
     });
     
     closeStatsModal.addEventListener('click', () => {
@@ -1249,16 +1274,30 @@
         }
     });
     
-    viewBtn.addEventListener('click', () => {
-        isSkyMode = !isSkyMode;
-        uiLayer.classList.toggle('hidden', isSkyMode);
-        viewBtn.innerText = isSkyMode ? "🕒 返回计时" : "✨ 查看星空";
+    // viewBtn.addEventListener('click', () => {
+    //     isSkyMode = !isSkyMode;
+    //     uiLayer.classList.toggle('hidden', isSkyMode);
+    //     viewBtn.innerText = isSkyMode ? "🕒 返回计时" : "✨ 查看星空";
         
-        // 在星空模式下，显示已点亮的星座列表
-        if (isSkyMode) {
+    //     // 在星空模式下，显示已点亮的星座列表
+    //     if (isSkyMode) {
+    //         showConstellationList();
+    //     } else {
+    //         document.getElementById('constellation-list').style.display = 'none';
+    //     }
+    // });
+
+    viewBtn.addEventListener('click', () => {
+        // 如果现在不是星空模式，先清理掉别的面板再进入
+        if (!isSkyMode) {
+            closeAllPanels();
+            isSkyMode = true; // 刚才closeAllPanels会把它设为false，这里要设回true
+            uiLayer.classList.add('hidden');
+            viewBtn.innerText = "🕒 返回计时";
             showConstellationList();
         } else {
-            document.getElementById('constellation-list').style.display = 'none';
+            // 如果已经是星空模式，点击就是为了返回
+            closeAllPanels();
         }
     });
     
@@ -1368,9 +1407,15 @@
         });
     }
     
+    // customizeBtn.addEventListener('click', () => {
+    //     renderFaceConfigs();
+    //     customizeModal.style.display = 'block';
+    // });
+
     customizeBtn.addEventListener('click', () => {
+        closeAllPanels(); // 先清理
         renderFaceConfigs();
-        customizeModal.style.display = 'block';
+        document.getElementById('customize-modal').style.display = 'block';
     });
     
     closeModal.addEventListener('click', () => {
